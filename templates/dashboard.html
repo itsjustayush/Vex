@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
-<!-- [Keep all your provided <head> and Tailwind config identical] -->
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -31,35 +30,51 @@
 </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-<!-- [Keep your SideNavBar Anchor exactly the same] -->
 <aside class="fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-surface-container-low border-r border-slate-border w-[280px]">
     <div class="p-6 flex items-center space-x-3">
         <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dataset</span></div>
         <div><h1 class="font-bold text-primary">Vex Workspace</h1><p class="text-xs text-on-surface-variant">Pro Plan</p></div>
     </div>
+    
+    <div class="px-4 mb-6">
+        <button class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-primary text-[#00382f] font-bold rounded-lg hover:brightness-110 transition-all">
+            <span class="material-symbols-outlined text-sm">add</span><span class="text-sm">New Project</span>
+        </button>
+    </div>
+    
+    <nav class="flex-1 px-3 space-y-1 custom-scrollbar overflow-y-auto">
+        <a class="flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-emerald-glow transition-all" href="#"><span class="material-symbols-outlined">dashboard</span><span class="text-sm">Dashboard</span></a>
+        <a class="flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all" href="#"><span class="material-symbols-outlined">folder_open</span><span class="text-sm">Projects</span></a>
+    </nav>
 </aside>
 
 <main class="flex-1 ml-[280px] flex flex-col h-full bg-background relative overflow-hidden">
 <div class="flex-1 flex overflow-hidden">
-<!-- Center Column: Markdown Editor -->
 <section class="flex-1 overflow-y-auto custom-scrollbar p-12 flex justify-center">
-    <!-- [Keep your provided Markdown article here] -->
-    <article class="max-w-[800px] w-full"><h2 class="text-3xl text-on-surface mb-4">Productivity Roadmap</h2><p class="text-on-surface-variant">Our focus for Q3 is accelerating the core engine.</p></article>
+    <article class="max-w-[800px] w-full">
+        <div class="flex items-center space-x-2 text-primary mb-4">
+            <span class="material-symbols-outlined text-lg">edit_note</span><span class="text-xs font-bold tracking-widest uppercase">Document</span>
+        </div>
+        <h2 class="text-4xl font-bold text-on-surface mb-6">Productivity Roadmap</h2>
+        <div class="space-y-6 text-lg text-on-surface-variant leading-relaxed">
+            <p>Our focus for Q3 is accelerating the core engine. We need to bridge the gap between ideation and execution by leveraging the new <span class="text-primary font-bold cursor-pointer hover:underline">[[Neural Graph]]</span> technology.</p>
+            <div class="bg-surface-container-low p-6 border-l-4 border-primary rounded-r-lg my-8">
+                <p class="italic text-on-surface font-medium">"The best way to predict the future is to create it through structured reflection and rapid iteration."</p>
+            </div>
+        </div>
+    </article>
 </section>
 
-<!-- Right Column: Daily View & AI -->
 <aside class="w-[360px] border-l border-slate-border bg-[#0e0e11] flex flex-col">
-    <!-- [Keep Calendar Widget] -->
-    <div class="p-6"><h4 class="font-bold text-lg mb-6">Daily View</h4></div>
+    <div class="p-6"><h4 class="font-bold text-lg mb-6 text-on-surface">Daily View</h4></div>
 
-    <!-- AI Assistant Chat Pane -->
-    <div class="mt-auto border-t border-slate-border glass-panel p-6 flex flex-col h-[400px]">
+    <div class="mt-auto border-t border-slate-border glass-panel p-6 flex flex-col h-[450px]">
         <div class="flex items-center space-x-2 mb-4">
             <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-            <h4 class="text-xs font-bold text-primary">VEX AI ASSISTANT</h4>
+            <h4 class="text-xs font-bold text-primary tracking-widest">VEX AI ASSISTANT</h4>
         </div>
         
-        <!-- Chat History Container -->
+        <!-- Chat History -->
         <div id="chat-history" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 mb-4 pr-2">
             <div class="flex flex-col items-start">
                 <div class="bg-surface-container-high rounded-2xl rounded-tl-none p-3 max-w-[90%]">

@@ -1,9 +1,12 @@
 import os
 import time
 from datetime import datetime, timezone
+from functools import wraps
+import jwt
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
+
 from gemini_client import GeminiAssistant
 
 load_dotenv()
@@ -37,7 +40,33 @@ def _human_uptime(seconds: int) -> str:
     parts.append(f"{secs}s")
     return " ".join(parts)
 
-# --- Frontend Routes ---
+
+def token_required(f):
+    """
+    This decorator protects endpoints. It checks for a valid JWT token
+    issued by Supabase in the Authorization header.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if "Authorization" in request.headers:
+            parts = request.headers["Authorization"].split()
+            if len(parts) == 2 and parts[0] == "Bearer":
+                token = parts[1]
+        
+        if not token:
+            return jsonify({"error": "Authentication Token is missing. Please log in."}), 401
+        
+        try:
+            secret = os.environ.get("SUPABASE_JWT_SECRET", "")
+            data = jwt.decode(token, secret, algorithms=["HS256"], audience="authenticated")
+            current_user_id = data.get("sub") 
+        except Exception as e:
+            return jsonify({"error": "Token is invalid or expired", "detail": str(e)}), 401
+            
+        return f(current_user_id, *args, **kwargs)
+    return decorated
+
 
 @app.route("/")
 def landing_page():
@@ -49,7 +78,6 @@ def dashboard_page():
 
 @app.route("/docs")
 def docs_page():
-    # We will use the dark version you provided as the default
     return render_template("docs.html")
 
 @app.route("/status")
@@ -58,13 +86,16 @@ def status_page():
 
 @app.route("/login")
 def login_page():
-    return render_template("login.html")
+    return render_template(
+        "login.html",
+        supabase_url=os.environ.get("SUPABASE_URL", ""),
+        supabase_anon_key=os.environ.get("SUPABASE_ANON_KEY", "")
+    )
 
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
 
-# --- API Routes (Kept Intact) ---
 
 @app.get("/api/health")
 def health():
@@ -78,6 +109,16 @@ def health():
         "uptime_human": _human_uptime(uptime),
         "active_conversations": assistant.active_conversation_count() if assistant else 0,
         "server_time_utc": datetime.now(timezone.utc).isoformat(),
+    })
+
+@app.get("/api/me")
+@token_required
+def get_current_user(current_user_id):
+    """Test endpoint to verify valid JWT tokens."""
+    return jsonify({
+        "status": "success",
+        "message": "You are securely authenticated!",
+        "user_id": current_user_id
     })
 
 @app.post("/api/chat")
@@ -110,15 +151,6 @@ def chat():
         "model": dynamic_model or assistant.model,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
-
-@app.post("/api/reset")
-def reset():
-    if not GEMINI_READY:
-        return jsonify({"error": "Gemini is not configured"}), 503
-    data = request.get_json(silent=True) or {}
-    user_id = str(data.get("user_id") or "default_user")
-    assistant.reset_history(user_id)
-    return jsonify({"status": "ok", "user_id": user_id})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
