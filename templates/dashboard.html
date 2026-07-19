@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<!-- [Keep all your provided <head> and Tailwind config identical] -->
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vex Workspace - Productivity Roadmap</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                "colors": {
+                    "surface-dim": "#131316", "primary": "#63dac3", "background": "#131316", "white": "#FFFFFF", "emerald-glow": "rgba(54, 180, 159, 0.1)", "on-surface-variant": "#bcc9c5", "on-primary": "#00382f", "surface-container-low": "#1b1b1e", "surface-container-highest": "#353438", "secondary": "#b1d34f", "slate-border": "#27272A", "on-surface": "#e4e1e6", "slate-text": "#52525B", "surface-container-high": "#2a2a2d"
+                }
+            }
+        }
+    }
+</script>
+<style>
+    body { background-color: #131316; color: #e4e1e6; font-family: 'Inter', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .glass-panel { background: rgba(31, 31, 34, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(39, 39, 42, 0.5); }
+    .markdown-editor:focus { outline: none; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272A; border-radius: 10px; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- [Keep your SideNavBar Anchor exactly the same] -->
+<aside class="fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-surface-container-low border-r border-slate-border w-[280px]">
+    <div class="p-6 flex items-center space-x-3">
+        <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dataset</span></div>
+        <div><h1 class="font-bold text-primary">Vex Workspace</h1><p class="text-xs text-on-surface-variant">Pro Plan</p></div>
+    </div>
+</aside>
+
+<main class="flex-1 ml-[280px] flex flex-col h-full bg-background relative overflow-hidden">
+<div class="flex-1 flex overflow-hidden">
+<!-- Center Column: Markdown Editor -->
+<section class="flex-1 overflow-y-auto custom-scrollbar p-12 flex justify-center">
+    <!-- [Keep your provided Markdown article here] -->
+    <article class="max-w-[800px] w-full"><h2 class="text-3xl text-on-surface mb-4">Productivity Roadmap</h2><p class="text-on-surface-variant">Our focus for Q3 is accelerating the core engine.</p></article>
+</section>
+
+<!-- Right Column: Daily View & AI -->
+<aside class="w-[360px] border-l border-slate-border bg-[#0e0e11] flex flex-col">
+    <!-- [Keep Calendar Widget] -->
+    <div class="p-6"><h4 class="font-bold text-lg mb-6">Daily View</h4></div>
+
+    <!-- AI Assistant Chat Pane -->
+    <div class="mt-auto border-t border-slate-border glass-panel p-6 flex flex-col h-[400px]">
+        <div class="flex items-center space-x-2 mb-4">
+            <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+            <h4 class="text-xs font-bold text-primary">VEX AI ASSISTANT</h4>
+        </div>
+        
+        <!-- Chat History Container -->
+        <div id="chat-history" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 mb-4 pr-2">
+            <div class="flex flex-col items-start">
+                <div class="bg-surface-container-high rounded-2xl rounded-tl-none p-3 max-w-[90%]">
+                    <p class="text-xs text-on-surface-variant">Hello! I am Vex. How can I assist you with your workspace today?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="relative">
+            <textarea id="chat-input" class="w-full bg-background border border-slate-border rounded-xl p-3 text-xs focus:ring-1 focus:ring-primary focus:border-primary resize-none markdown-editor text-white" placeholder="Ask Vex AI..." rows="2"></textarea>
+            <button id="send-btn" class="absolute bottom-3 right-3 text-primary hover:text-white transition-colors">
+                <span class="material-symbols-outlined">send</span>
+            </button>
+        </div>
+    </div>
+</aside>
+</div>
+</main>
+
+<script>
+    const chatHistory = document.getElementById('chat-history');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    function appendMessage(text, isUser) {
+        const div = document.createElement('div');
+        div.className = isUser ? 'flex flex-col items-end' : 'flex flex-col items-start';
+        
+        const bubble = document.createElement('div');
+        bubble.className = isUser 
+            ? 'bg-primary text-[#00382f] rounded-2xl rounded-tr-none p-3 max-w-[90%]'
+            : 'bg-[#2a2a2d] text-[#bcc9c5] rounded-2xl rounded-tl-none p-3 max-w-[90%]';
+        
+        const p = document.createElement('p');
+        p.className = 'text-xs font-medium';
+        p.textContent = text;
+        
+        bubble.appendChild(p);
+        div.appendChild(bubble);
+        chatHistory.appendChild(div);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        appendMessage(message, true);
+        chatInput.value = '';
+        chatInput.disabled = true;
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, user_id: 'dashboard_user' })
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                appendMessage(data.response, false);
+            } else {
+                appendMessage("Error: " + (data.error || "Failed to connect."), false);
+            }
+        } catch (err) {
+            appendMessage("Network error.", false);
+        } finally {
+            chatInput.disabled = false;
+            chatInput.focus();
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>

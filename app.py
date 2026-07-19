@@ -12,7 +12,7 @@ app = Flask(__name__)
 CORS(app)
 
 START_TIME = time.time()
-BOT_NAME = os.environ.get("BOT_NAME", "My Assistant")
+BOT_NAME = os.environ.get("BOT_NAME", "Vex")
 
 try:
     assistant = GeminiAssistant()
@@ -37,9 +37,34 @@ def _human_uptime(seconds: int) -> str:
     parts.append(f"{secs}s")
     return " ".join(parts)
 
-@app.get("/")
+# --- Frontend Routes ---
+
+@app.route("/")
+def landing_page():
+    return render_template("index.html")
+
+@app.route("/dashboard")
+def dashboard_page():
+    return render_template("dashboard.html")
+
+@app.route("/docs")
+def docs_page():
+    # We will use the dark version you provided as the default
+    return render_template("docs.html")
+
+@app.route("/status")
 def status_page():
-    return render_template("index.html", bot_name=BOT_NAME)
+    return render_template("status.html")
+
+@app.route("/login")
+def login_page():
+    return render_template("login.html")
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
+
+# --- API Routes (Kept Intact) ---
 
 @app.get("/api/health")
 def health():
@@ -55,18 +80,6 @@ def health():
         "server_time_utc": datetime.now(timezone.utc).isoformat(),
     })
 
-@app.get("/api/info")
-def info():
-    return jsonify({
-        "bot_name": BOT_NAME,
-        "model": assistant.model if assistant else None,
-        "endpoints": {
-            "chat": "POST /api/chat  { message, user_id? }",
-            "reset": "POST /api/reset  { user_id? }",
-            "health": "GET /api/health",
-        },
-    })
-
 @app.post("/api/chat")
 def chat():
     if not GEMINI_READY:
@@ -75,19 +88,26 @@ def chat():
     data = request.get_json(silent=True) or {}
     message = (data.get("message") or "").strip()
     user_id = str(data.get("user_id") or "default_user")
+    image_base64 = data.get("image_base64")
+    dynamic_model = data.get("model")
 
-    if not message:
-        return jsonify({"error": "Field 'message' is required and cannot be empty"}), 400
+    if not message and not image_base64:
+        return jsonify({"error": "Field 'message' or 'image_base64' is required"}), 400
 
     try:
-        reply = assistant.chat(user_id=user_id, message=message)
+        reply = assistant.chat(
+            user_id=user_id, 
+            message=message, 
+            image_base64=image_base64,
+            dynamic_model=dynamic_model
+        )
     except RuntimeError as exc:
         return jsonify({"error": "Failed to get a response from Gemini", "detail": str(exc)}), 502
 
     return jsonify({
         "response": reply,
         "user_id": user_id,
-        "model": assistant.model,
+        "model": dynamic_model or assistant.model,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
 
