@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ bot_name }} — status</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <div class="identity">
+        <span class="dot" id="status-dot"></span>
+        <h1>{{ bot_name }}</h1>
+      </div>
+      <span class="badge" id="status-badge">CHECKING…</span>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">keep-alive pulse</div>
+      <div class="trace-viewport">
+        <div class="trace-track" id="trace-track">
+          <svg viewBox="0 0 400 96" preserveAspectRatio="none">
+            <polyline id="trace-a" points="0,48 40,48 55,48 65,16 75,80 85,48 100,48 140,48 155,48 165,16 175,80 185,48 200,48 240,48 255,48 265,16 275,80 285,48 300,48 340,48 355,48 365,16 375,80 385,48 400,48" />
+          </svg>
+          <svg viewBox="0 0 400 96" preserveAspectRatio="none">
+            <polyline id="trace-b" points="0,48 40,48 55,48 65,16 75,80 85,48 100,48 140,48 155,48 165,16 175,80 185,48 200,48 240,48 255,48 265,16 275,80 285,48 300,48 340,48 355,48 365,16 375,80 385,48 400,48" />
+          </svg>
+        </div>
+      </div>
+      <div class="uptime-readout">
+        <div>
+          <div class="label">uptime</div>
+          <div class="value" id="uptime-value">—</div>
+        </div>
+        <div class="last-ping" id="last-ping">last ping —</div>
+      </div>
+    </section>
+
+    <section class="stat-grid">
+      <div class="stat"><div class="label">status</div><div class="value" id="stat-status">—</div></div>
+      <div class="stat"><div class="label">model</div><div class="value" id="stat-model">—</div></div>
+      <div class="stat"><div class="label">active chats</div><div class="value" id="stat-conversations">—</div></div>
+      <div class="stat"><div class="label">server time (utc)</div><div class="value" id="stat-time">—</div></div>
+    </section>
+
+    <section class="console">
+      <div class="console-head">
+        <span>test the api — POST /api/chat</span>
+        <button class="reset-btn" id="reset-btn" type="button">reset history</button>
+      </div>
+      <div class="transcript" id="transcript">
+        <div class="empty">Send a message below...</div>
+      </div>
+      <form class="console-input" id="chat-form">
+        <span class="prompt">&gt;</span>
+        <input type="text" id="chat-input" placeholder="ask something…" autocomplete="off" />
+        <button type="submit" id="send-btn">send</button>
+      </form>
+    </section>
+  </div>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
