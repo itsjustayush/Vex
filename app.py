@@ -197,6 +197,13 @@ def get_calendar(current_user_id):
         ]
     }), 200
 
+@app.route("/settings")
+def settings_page():
+    return render_template(
+        "settings.html",
+        supabase_url=os.environ.get("SUPABASE_URL", ""),
+        supabase_anon_key=os.environ.get("SUPABASE_ANON_KEY", "")
+    )
 
 @app.post("/api/chat")
 def chat():

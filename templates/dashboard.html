@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Vex Workspace - Productivity Roadmap</title>
+<title>Vex Workspace - Productivity Engine</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet"/>
 <script id="tailwind-config">
     tailwind.config = {
         darkMode: "class",
         theme: {
             extend: {
-                "colors": {
+                colors: {
                     "surface-dim": "#131316", "primary": "#63dac3", "background": "#131316", "white": "#FFFFFF", "emerald-glow": "rgba(54, 180, 159, 0.1)", "on-surface-variant": "#bcc9c5", "on-primary": "#00382f", "surface-container-low": "#1b1b1e", "surface-container-highest": "#353438", "secondary": "#b1d34f", "slate-border": "#27272A", "on-surface": "#e4e1e6", "slate-text": "#52525B", "surface-container-high": "#2a2a2d"
                 }
             }
@@ -27,136 +27,345 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272A; border-radius: 10px; }
+    .side-panel-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 </style>
 </head>
 <body class="flex h-screen overflow-hidden">
+
+<!-- LEFT SIDEBAR -->
 <aside class="fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-surface-container-low border-r border-slate-border w-[280px]">
     <div class="p-6 flex items-center space-x-3">
-        <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dataset</span></div>
-        <div><h1 class="font-bold text-primary">Vex Workspace</h1><p class="text-xs text-on-surface-variant">Pro Plan</p></div>
+        <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dataset</span>
+        </div>
+        <div>
+            <h1 class="font-bold text-primary text-base">Vex Workspace</h1>
+            <p class="text-xs text-on-surface-variant">Pro Plan</p>
+        </div>
     </div>
     
     <div class="px-4 mb-6">
-        <button class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-primary text-[#00382f] font-bold rounded-lg hover:brightness-110 transition-all">
-            <span class="material-symbols-outlined text-sm">add</span><span class="text-sm">New Project</span>
+        <button id="open-new-project-modal" class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-primary text-[#00382f] font-bold rounded-lg hover:brightness-110 transition-all shadow-lg shadow-primary/10">
+            <span class="material-symbols-outlined text-sm">add</span>
+            <span class="text-sm">New Project</span>
         </button>
     </div>
     
     <nav class="flex-1 px-3 space-y-1 custom-scrollbar overflow-y-auto">
-        <a class="flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-emerald-glow transition-all" href="#"><span class="material-symbols-outlined">dashboard</span><span class="text-sm">Dashboard</span></a>
-        <a class="flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all" href="#"><span class="material-symbols-outlined">folder_open</span><span class="text-sm">Projects</span></a>
+        <button id="nav-dashboard-btn" class="w-full flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-emerald-glow transition-all rounded-r-lg">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="text-sm">Dashboard</span>
+        </button>
+        <button id="nav-projects-btn" class="w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all rounded-lg">
+            <span class="material-symbols-outlined">folder_open</span>
+            <span class="text-sm">Projects</span>
+        </button>
+        <a class="w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all rounded-lg" href="/docs">
+            <span class="material-symbols-outlined">api</span>
+            <span class="text-sm">API Docs</span>
+        </a>
     </nav>
-</aside>
 
-<main class="flex-1 ml-[280px] flex flex-col h-full bg-background relative overflow-hidden">
-<div class="flex-1 flex overflow-hidden">
-<section class="flex-1 overflow-y-auto custom-scrollbar p-12 flex justify-center">
-    <article class="max-w-[800px] w-full">
-        <div class="flex items-center space-x-2 text-primary mb-4">
-            <span class="material-symbols-outlined text-lg">edit_note</span><span class="text-xs font-bold tracking-widest uppercase">Document</span>
-        </div>
-        <h2 class="text-4xl font-bold text-on-surface mb-6">Productivity Roadmap</h2>
-        <div class="space-y-6 text-lg text-on-surface-variant leading-relaxed">
-            <p>Our focus for Q3 is accelerating the core engine. We need to bridge the gap between ideation and execution by leveraging the new <span class="text-primary font-bold cursor-pointer hover:underline">[[Neural Graph]]</span> technology.</p>
-            <div class="bg-surface-container-low p-6 border-l-4 border-primary rounded-r-lg my-8">
-                <p class="italic text-on-surface font-medium">"The best way to predict the future is to create it through structured reflection and rapid iteration."</p>
+    <!-- Discord-Style Account/Profile Widget at Bottom -->
+    <div class="p-3 m-3 bg-[#131316] border border-slate-border rounded-xl flex items-center justify-between">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center font-bold text-xs uppercase" id="user-avatar-initial">
+                U
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold text-on-surface truncate" id="user-email-display">Loading...</p>
+                <p class="text-[10px] text-emerald-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online
+                </p>
             </div>
         </div>
-    </article>
-</section>
+        <a href="/settings" class="text-slate-text hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high" title="Account Settings">
+            <span class="material-symbols-outlined text-lg">settings</span>
+        </a>
+    </div>
+</aside>
 
-<aside class="w-[360px] border-l border-slate-border bg-[#0e0e11] flex flex-col">
-    <div class="p-6"><h4 class="font-bold text-lg mb-6 text-on-surface">Daily View</h4></div>
+<!-- MAIN CONTENT WRAPPER -->
+<main class="flex-1 ml-[280px] flex flex-col h-full bg-background relative overflow-hidden">
+<div class="flex-1 flex overflow-hidden">
 
-    <div class="mt-auto border-t border-slate-border glass-panel p-6 flex flex-col h-[450px]">
-        <div class="flex items-center space-x-2 mb-4">
-            <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-            <h4 class="text-xs font-bold text-primary tracking-widest">VEX AI ASSISTANT</h4>
+    <!-- VIEW 1: DASHBOARD (NOTES & WORKSPACE) -->
+    <section id="view-dashboard" class="flex-1 overflow-y-auto custom-scrollbar p-10 flex justify-center">
+        <article class="max-w-[800px] w-full">
+            <div class="flex items-center space-x-2 text-primary mb-4">
+                <span class="material-symbols-outlined text-lg">edit_note</span>
+                <span class="text-xs font-bold tracking-widest uppercase">Active Document</span>
+            </div>
+            <h2 class="text-4xl font-bold text-on-surface mb-6">Productivity Roadmap</h2>
+            <div class="space-y-6 text-lg text-on-surface-variant leading-relaxed">
+                <p>Our focus for Q3 is accelerating the core engine. We need to bridge the gap between ideation and execution by leveraging the new <span class="text-primary font-bold cursor-pointer hover:underline">[[Neural Graph]]</span> technology.</p>
+                <div class="bg-surface-container-low p-6 border-l-4 border-primary rounded-r-lg my-8">
+                    <p class="italic text-on-surface font-medium">"The best way to predict the future is to create it through structured reflection and rapid iteration."</p>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <!-- VIEW 2: PROJECTS GRID (Hidden by default) -->
+    <section id="view-projects" class="flex-1 overflow-y-auto custom-scrollbar p-10 hidden">
+        <div class="max-w-[900px] mx-auto space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-on-surface">Projects</h2>
+                    <p class="text-sm text-slate-text">Manage your active workspaces and connected repositories.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="projects-container">
+                <!-- Sample Active Project Card -->
+                <div class="glass-panel p-5 rounded-xl space-y-3">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">Active</span>
+                        <span class="material-symbols-outlined text-slate-text text-sm">more_vert</span>
+                    </div>
+                    <h3 class="font-bold text-lg text-on-surface">Neural Graph Integration</h3>
+                    <p class="text-xs text-slate-text">Building bidirectional linking for Gemini AI prompts and notes context.</p>
+                </div>
+            </div>
         </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR (CALENDAR + MINIMIZABLE VEX AI ASSISTANT) -->
+    <aside id="right-panel" class="w-[360px] border-l border-slate-border bg-[#0e0e11] flex flex-col side-panel-transition relative">
         
-        <!-- Chat History -->
-        <div id="chat-history" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 mb-4 pr-2">
-            <div class="flex flex-col items-start">
-                <div class="bg-surface-container-high rounded-2xl rounded-tl-none p-3 max-w-[90%]">
-                    <p class="text-xs text-on-surface-variant">Hello! I am Vex. How can I assist you with your workspace today?</p>
+        <!-- Toggle Button to Collapse/Minimize Panel -->
+        <button id="toggle-right-panel" class="absolute -left-3 top-6 bg-surface-container-high border border-slate-border text-slate-text hover:text-primary rounded-full p-1 z-50 shadow-md">
+            <span class="material-symbols-outlined text-sm" id="toggle-icon">chevron_right</span>
+        </button>
+
+        <!-- Panel Header Tabs -->
+        <div class="p-4 border-b border-slate-border flex items-center justify-between gap-2 bg-surface-container-low">
+            <div class="flex gap-2">
+                <button id="tab-btn-calendar" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">calendar_month</span> Calendar
+                </button>
+                <button id="tab-btn-ai" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-text hover:text-on-surface flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">smart_toy</span> Vex AI
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT 1: GOOGLE WORKSPACE CALENDAR -->
+        <div id="tab-content-calendar" class="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-6">
+            <div class="flex justify-between items-center">
+                <h4 class="font-bold text-sm text-on-surface uppercase tracking-wider" id="calendar-month-year">July 2026</h4>
+                <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Google Synced
+                </span>
+            </div>
+
+            <!-- Dark Theme Calendar Grid -->
+            <div class="grid grid-cols-7 gap-1 text-center text-xs">
+                <span class="text-slate-text font-bold text-[10px]">Su</span>
+                <span class="text-slate-text font-bold text-[10px]">Mo</span>
+                <span class="text-slate-text font-bold text-[10px]">Tu</span>
+                <span class="text-slate-text font-bold text-[10px]">We</span>
+                <span class="text-slate-text font-bold text-[10px]">Th</span>
+                <span class="text-slate-text font-bold text-[10px]">Fr</span>
+                <span class="text-slate-text font-bold text-[10px]">Sa</span>
+
+                <!-- Days of July 2026 -->
+                <span class="p-2 text-slate-text opacity-30">28</span><span class="p-2 text-slate-text opacity-30">29</span><span class="p-2 text-slate-text opacity-30">30</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">1</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">2</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">3</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">4</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">5</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">6</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">7</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">8</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">9</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">10</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">11</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">12</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">13</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">14</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">15</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">16</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">17</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">18</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">19</span>
+                <!-- Today Highlighted -->
+                <span class="p-2 bg-primary text-[#00382f] font-bold rounded shadow-lg shadow-primary/20">20</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">21</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">22</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">23</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">24</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">25</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">26</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">27</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">28</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">29</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">30</span>
+                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">31</span>
+            </div>
+
+            <!-- Workspace Upcoming Agenda -->
+            <div class="space-y-3 pt-4 border-t border-slate-border">
+                <h5 class="text-xs font-bold text-slate-text uppercase">Upcoming Events</h5>
+                <div class="p-3 bg-surface-container-low rounded-xl border border-slate-border space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-primary">Product Sync</span>
+                        <span class="text-[10px] text-slate-text">10:00 AM</span>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant">Related to Project Alpha notes context.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Chat Input -->
-        <div class="relative">
-            <textarea id="chat-input" class="w-full bg-background border border-slate-border rounded-xl p-3 text-xs focus:ring-1 focus:ring-primary focus:border-primary resize-none markdown-editor text-white" placeholder="Ask Vex AI..." rows="2"></textarea>
-            <button id="send-btn" class="absolute bottom-3 right-3 text-primary hover:text-white transition-colors">
-                <span class="material-symbols-outlined">send</span>
-            </button>
+        <!-- TAB CONTENT 2: VEX AI CHATBOT (Hidden by default tab) -->
+        <div id="tab-content-ai" class="flex-1 flex flex-col p-4 hidden overflow-hidden">
+            <div id="chat-history" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 mb-4 pr-1">
+                <div class="flex flex-col items-start">
+                    <div class="bg-surface-container-high rounded-2xl rounded-tl-none p-3 max-w-[90%]">
+                        <p class="text-xs text-on-surface-variant">Hello! I am Vex. How can I assist you with your workspace today?</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input -->
+            <div class="relative">
+                <textarea id="chat-input" class="w-full bg-background border border-slate-border rounded-xl p-3 text-xs focus:ring-1 focus:ring-primary focus:border-primary resize-none markdown-editor text-white" placeholder="Ask Vex AI..." rows="2"></textarea>
+                <button id="send-btn" class="absolute bottom-3 right-3 text-primary hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-sm">send</span>
+                </button>
+            </div>
         </div>
-    </div>
-</aside>
+
+    </aside>
+
 </div>
 </main>
 
+<!-- NEW PROJECT MODAL -->
+<div id="new-project-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="glass-panel p-6 rounded-2xl max-w-md w-full mx-4 space-y-4 border border-slate-border">
+        <div class="flex justify-between items-center">
+            <h3 class="font-bold text-lg text-on-surface">Create New Project</h3>
+            <button id="close-modal" class="text-slate-text hover:text-on-surface"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-xs font-bold text-slate-text uppercase">Project Name</label>
+                <input id="project-title-input" type="text" class="w-full mt-1 bg-surface-container-low border border-slate-border rounded-lg p-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary text-white" placeholder="e.g., Physics Notes Synthesis">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-text uppercase">Description</label>
+                <textarea id="project-desc-input" class="w-full mt-1 bg-surface-container-low border border-slate-border rounded-lg p-2.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary text-white" rows="3" placeholder="Brief outline of project scope..."></textarea>
+            </div>
+        </div>
+        <button id="save-project-btn" class="w-full py-2.5 bg-primary text-[#00382f] font-bold rounded-lg hover:brightness-110 transition-all text-sm">
+            Save Project
+        </button>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // --- 1. Supabase Initialization & State ---
-    const SUPABASE_URL = '{{ supabase_url }}';
-    const SUPABASE_ANON_KEY = '{{ supabase_anon_key }}';
-    let supabaseClient = null;
-    let jwtToken = null;
+    const supabaseClient = window.supabase.createClient('{{ supabase_url }}', '{{ supabase_anon_key }}');
     let currentUserId = null;
 
-    if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== '') {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-
-    // --- 2. Auth Guard & App Initialization ---
+    // 1. AUTH GUARD
     window.onload = async () => {
-        if (!supabaseClient) return;
-
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
-        
-        // Kick them back to login if no session exists
-        if (error || !session) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
             window.location.href = '/login';
             return;
         }
-
-        // Save auth state for API calls
-        jwtToken = session.access_token;
         currentUserId = session.user.id;
-        
-        console.log("Authenticated as:", session.user.email);
-
-        // Fetch initial user data from Flask API
-        await fetchNotes();
-        await fetchWorkspace();
+        document.getElementById('user-email-display').innerText = session.user.email;
+        document.getElementById('user-avatar-initial').innerText = (session.user.email[0] || 'U').toUpperCase();
     };
 
-    // --- 3. API Integrations (CRUD) ---
-    async function fetchNotes() {
-        try {
-            const res = await fetch('/api/v1/notes', {
-                headers: { 'Authorization': `Bearer ${jwtToken}` }
-            });
-            const data = await res.json();
-            console.log("Your Secure Notes:", data.notes || data);
-        } catch (error) {
-            console.error("Error fetching notes:", error);
-        }
-    }
+    // 2. NAV TAB SWITCHING (Dashboard vs Projects)
+    const viewDashboard = document.getElementById('view-dashboard');
+    const viewProjects = document.getElementById('view-projects');
+    const navDashBtn = document.getElementById('nav-dashboard-btn');
+    const navProjBtn = document.getElementById('nav-projects-btn');
 
-    async function fetchWorkspace() {
-        try {
-            const res = await fetch('/api/v1/workspace/calendar', {
-                headers: { 'Authorization': `Bearer ${jwtToken}` }
-            });
-            const data = await res.json();
-            console.log("Upcoming Google Events:", data.events || data);
-        } catch (error) {
-            console.error("Error fetching workspace:", error);
-        }
-    }
+    navDashBtn.addEventListener('click', () => {
+        viewDashboard.classList.remove('hidden');
+        viewProjects.classList.add('hidden');
+        navDashBtn.className = "w-full flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-emerald-glow transition-all rounded-r-lg";
+        navProjBtn.className = "w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all rounded-lg";
+    });
 
-    // --- 4. Chatbot Logic ---
+    navProjBtn.addEventListener('click', () => {
+        viewProjects.classList.remove('hidden');
+        viewDashboard.classList.add('hidden');
+        navProjBtn.className = "w-full flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-emerald-glow transition-all rounded-r-lg";
+        navDashBtn.className = "w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all rounded-lg";
+    });
+
+    // 3. RIGHT PANEL COLLAPSE / MINIMIZE
+    const rightPanel = document.getElementById('right-panel');
+    const toggleIcon = document.getElementById('toggle-icon');
+    let isMinimized = false;
+
+    document.getElementById('toggle-right-panel').addEventListener('click', () => {
+        isMinimized = !isMinimized;
+        if (isMinimized) {
+            rightPanel.style.width = '0px';
+            rightPanel.style.overflow = 'hidden';
+            toggleIcon.innerText = 'chevron_left';
+        } else {
+            rightPanel.style.width = '360px';
+            rightPanel.style.overflow = 'visible';
+            toggleIcon.innerText = 'chevron_right';
+        }
+    });
+
+    // 4. RIGHT PANEL TABS (Calendar vs AI)
+    const tabBtnCalendar = document.getElementById('tab-btn-calendar');
+    const tabBtnAi = document.getElementById('tab-btn-ai');
+    const tabContentCalendar = document.getElementById('tab-content-calendar');
+    const tabContentAi = document.getElementById('tab-content-ai');
+
+    tabBtnCalendar.addEventListener('click', () => {
+        tabContentCalendar.classList.remove('hidden');
+        tabContentAi.classList.add('hidden');
+        tabBtnCalendar.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5";
+        tabBtnAi.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-text hover:text-on-surface flex items-center gap-1.5";
+    });
+
+    tabBtnAi.addEventListener('click', () => {
+        tabContentAi.classList.remove('hidden');
+        tabContentCalendar.classList.add('hidden');
+        tabBtnAi.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5";
+        tabBtnCalendar.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-text hover:text-on-surface flex items-center gap-1.5";
+    });
+
+    // 5. NEW PROJECT MODAL LOGIC
+    const modal = document.getElementById('new-project-modal');
+    document.getElementById('open-new-project-modal').addEventListener('click', () => modal.classList.remove('hidden'));
+    document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
+
+    document.getElementById('save-project-btn').addEventListener('click', () => {
+        const title = document.getElementById('project-title-input').value.trim();
+        const desc = document.getElementById('project-desc-input').value.trim();
+        if (!title) return;
+
+        const card = document.createElement('div');
+        card.className = "glass-panel p-5 rounded-xl space-y-3";
+        card.innerHTML = `
+            <div class="flex justify-between items-start">
+                <span class="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">Active</span>
+            </div>
+            <h3 class="font-bold text-lg text-on-surface">${title}</h3>
+            <p class="text-xs text-slate-text">${desc || 'No description provided.'}</p>
+        `;
+        document.getElementById('projects-container').appendChild(card);
+        modal.classList.add('hidden');
+        document.getElementById('project-title-input').value = '';
+        document.getElementById('project-desc-input').value = '';
+    });
+
+    // 6. CHATBOT LOGIC
     const chatHistory = document.getElementById('chat-history');
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
@@ -164,16 +373,13 @@
     function appendMessage(text, isUser) {
         const div = document.createElement('div');
         div.className = isUser ? 'flex flex-col items-end' : 'flex flex-col items-start';
-        
         const bubble = document.createElement('div');
         bubble.className = isUser 
-            ? 'bg-primary text-[#00382f] rounded-2xl rounded-tr-none p-3 max-w-[90%]'
+            ? 'bg-primary text-[#00382f] rounded-2xl rounded-tr-none p-3 max-w-[90%]' 
             : 'bg-[#2a2a2d] text-[#bcc9c5] rounded-2xl rounded-tl-none p-3 max-w-[90%]';
-        
         const p = document.createElement('p');
         p.className = 'text-xs font-medium';
         p.textContent = text;
-        
         bubble.appendChild(p);
         div.appendChild(bubble);
         chatHistory.appendChild(div);
@@ -183,7 +389,6 @@
     async function sendMessage() {
         const message = chatInput.value.trim();
         if (!message) return;
-
         appendMessage(message, true);
         chatInput.value = '';
         chatInput.disabled = true;
@@ -192,11 +397,9 @@
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Use the REAL authenticated user ID for the chat context!
                 body: JSON.stringify({ message: message, user_id: currentUserId || 'guest_user' })
             });
             const data = await response.json();
-            
             if (response.ok) {
                 appendMessage(data.response, false);
             } else {
