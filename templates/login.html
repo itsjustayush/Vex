@@ -62,27 +62,39 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Replace the <script> tags at the bottom of templates/login.html with this: -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // Injected securely from Flask backend via Jinja2
     const SUPABASE_URL = '{{ supabase_url }}';
     const SUPABASE_ANON_KEY = '{{ supabase_anon_key }}';
     
-    // Fix: Rename to supabaseClient to avoid global namespace collision
     let supabaseClient;
     if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== '') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 
+    // AUTH GUARD: If already logged in, redirect to dashboard instantly
+    window.onload = async () => {
+        if (supabaseClient) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = '/dashboard';
+            }
+        }
+    };
+
     const btnGoogle = document.getElementById('btn-google');
     if (btnGoogle) {
         btnGoogle.addEventListener('click', async () => {
-            if (!supabaseClient) {
-                console.error("Supabase keys not configured. Check Vercel Environment Variables.");
-                return;
-            }
+            if (!supabaseClient) return console.error("Supabase keys not configured.");
+            
             const { error } = await supabaseClient.auth.signInWithOAuth({ 
                 provider: 'google', 
-                options: { redirectTo: window.location.origin + '/dashboard' }
+                options: { 
+                    // Requesting Google Workspace Permissions!
+                    scopes: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/tasks',
+                    redirectTo: window.location.origin + '/dashboard' 
+                }
             });
             if (error) console.error("Login Error:", error.message);
         });
@@ -91,10 +103,7 @@
     const btnGithub = document.getElementById('btn-github');
     if (btnGithub) {
         btnGithub.addEventListener('click', async () => {
-            if (!supabaseClient) {
-                console.error("Supabase keys not configured. Check Vercel Environment Variables.");
-                return;
-            }
+            if (!supabaseClient) return console.error("Supabase keys not configured.");
             const { error } = await supabaseClient.auth.signInWithOAuth({ 
                 provider: 'github', 
                 options: { redirectTo: window.location.origin + '/dashboard' }

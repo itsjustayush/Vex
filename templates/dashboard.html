@@ -95,7 +95,68 @@
 </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+    // --- 1. Supabase Initialization & State ---
+    const SUPABASE_URL = '{{ supabase_url }}';
+    const SUPABASE_ANON_KEY = '{{ supabase_anon_key }}';
+    let supabaseClient = null;
+    let jwtToken = null;
+    let currentUserId = null;
+
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== '') {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // --- 2. Auth Guard & App Initialization ---
+    window.onload = async () => {
+        if (!supabaseClient) return;
+
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        
+        // Kick them back to login if no session exists
+        if (error || !session) {
+            window.location.href = '/login';
+            return;
+        }
+
+        // Save auth state for API calls
+        jwtToken = session.access_token;
+        currentUserId = session.user.id;
+        
+        console.log("Authenticated as:", session.user.email);
+
+        // Fetch initial user data from Flask API
+        await fetchNotes();
+        await fetchWorkspace();
+    };
+
+    // --- 3. API Integrations (CRUD) ---
+    async function fetchNotes() {
+        try {
+            const res = await fetch('/api/v1/notes', {
+                headers: { 'Authorization': `Bearer ${jwtToken}` }
+            });
+            const data = await res.json();
+            console.log("Your Secure Notes:", data.notes || data);
+        } catch (error) {
+            console.error("Error fetching notes:", error);
+        }
+    }
+
+    async function fetchWorkspace() {
+        try {
+            const res = await fetch('/api/v1/workspace/calendar', {
+                headers: { 'Authorization': `Bearer ${jwtToken}` }
+            });
+            const data = await res.json();
+            console.log("Upcoming Google Events:", data.events || data);
+        } catch (error) {
+            console.error("Error fetching workspace:", error);
+        }
+    }
+
+    // --- 4. Chatbot Logic ---
     const chatHistory = document.getElementById('chat-history');
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
@@ -131,7 +192,8 @@
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message, user_id: 'dashboard_user' })
+                // Use the REAL authenticated user ID for the chat context!
+                body: JSON.stringify({ message: message, user_id: currentUserId || 'guest_user' })
             });
             const data = await response.json();
             

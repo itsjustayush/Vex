@@ -14,6 +14,13 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+import uuid
+
+# Temporary In-Memory Database for Notes until we connect Supabase Postgres
+MOCK_DB = {
+    "notes": [] 
+}
+
 START_TIME = time.time()
 BOT_NAME = os.environ.get("BOT_NAME", "Vex")
 
@@ -74,7 +81,11 @@ def landing_page():
 
 @app.route("/dashboard")
 def dashboard_page():
-    return render_template("dashboard.html")
+    return render_template(
+        "dashboard.html",
+        supabase_url=os.environ.get("SUPABASE_URL", ""),
+        supabase_anon_key=os.environ.get("SUPABASE_ANON_KEY", "")
+    )
 
 @app.route("/docs")
 def docs_page():
@@ -120,6 +131,72 @@ def get_current_user(current_user_id):
         "message": "You are securely authenticated!",
         "user_id": current_user_id
     })
+
+
+# ==========================================
+# REST API: NOTES (CRUD)
+# ==========================================
+
+@app.route("/api/v1/notes", methods=["GET", "POST"])
+@token_required
+def handle_notes(current_user_id):
+    if request.method == "GET":
+        # Fetch all notes for this user
+        user_notes = [n for n in MOCK_DB["notes"] if n["user_id"] == current_user_id]
+        return jsonify({"status": "success", "notes": user_notes}), 200
+
+    if request.method == "POST":
+        # Create a new note
+        data = request.get_json() or {}
+        new_note = {
+            "id": f"nt_{uuid.uuid4().hex[:10]}",
+            "user_id": current_user_id,
+            "title": data.get("title", "Untitled Note"),
+            "content": data.get("content", ""),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "tags": data.get("tags", [])
+        }
+        MOCK_DB["notes"].append(new_note)
+        return jsonify({"status": "created", "note": new_note}), 201
+
+
+@app.route("/api/v1/notes/<note_id>", methods=["DELETE"])
+@token_required
+def delete_note(current_user_id, note_id):
+    # Find and delete the note
+    global MOCK_DB
+    initial_length = len(MOCK_DB["notes"])
+    MOCK_DB["notes"] = [n for n in MOCK_DB["notes"] if not (n["id"] == note_id and n["user_id"] == current_user_id)]
+    
+    if len(MOCK_DB["notes"]) < initial_length:
+        return jsonify({"status": "deleted"}), 200
+    return jsonify({"error": "Note not found or unauthorized"}), 404
+
+
+# ==========================================
+# REST API: GOOGLE WORKSPACE
+# ==========================================
+
+@app.route("/api/v1/workspace/calendar", methods=["GET"])
+@token_required
+def get_calendar(current_user_id):
+    """
+    In the future, we will take the Google Provider Token from the user's session
+    and hit the Google Calendar API here. For now, we return placeholder AI context.
+    """
+    return jsonify({
+        "sync_status": "active",
+        "provider": "google",
+        "events": [
+            {
+                "event_id": "gcal_mock_1",
+                "title": "Product Sync with Vex Team",
+                "start_time": datetime.now(timezone.utc).isoformat(),
+                "ai_context": "This meeting is related to your 'Project Alpha' note."
+            }
+        ]
+    }), 200
+
 
 @app.post("/api/chat")
 def chat():
