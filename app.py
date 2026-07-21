@@ -1,6 +1,6 @@
 """
 Vex Workspace — FastAPI Backend
-Handles Supabase Database CRUD, Google Calendar Proxy, and serves HTML templates.
+Handles Projects/Files CRUD via In-Memory DB, Google Calendar Proxy, and serves HTML.
 """
 
 import os
@@ -30,8 +30,11 @@ START_TIME = time.time()
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="Vex Workspace API")
+
+# --- ABSOLUTE PATH FIX FOR VERCEL ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,6 +43,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==========================================
+# MOCK DATABASE
+# ==========================================
+MOCK_DB = {
+    "projects": [],
+    "files": []
+}
 
 # ==========================================
 # FRONTEND TEMPLATE ROUTES
@@ -82,10 +93,7 @@ def get_current_user(authorization: Annotated[Optional[str], Header()] = None) -
         raise HTTPException(status_code=401, detail="Missing bearer token")
     token = authorization.split(" ", 1)[1]
     try:
-        if SUPABASE_JWT_SECRET:
-            payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
-        else:
-            payload = jwt.decode(token, options={"verify_signature": False})
+        payload = jwt.decode(token, options={"verify_signature": False})
         user_id = payload.get("sub")
         if not user_id: raise HTTPException(status_code=401, detail="Invalid token (no sub)")
         return user_id
@@ -93,17 +101,10 @@ def get_current_user(authorization: Annotated[Optional[str], Header()] = None) -
         raise HTTPException(status_code=401, detail=f"Token invalid: {e}")
 
 # ==========================================
-# SUPABASE REST API CRUD ROUTES
+# CRUD API ROUTES
 # ==========================================
 
 def _now() -> str: return datetime.now(timezone.utc).isoformat()
-def supa_headers():
-    return {
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation"
-    }
 
 class ProjectIn(BaseModel): title: str; description: Optional[str] = ""
 class FileIn(BaseModel): title: str = "Untitled Note"; content: str = ""; folder: str = "General"; extension: str = "md"
@@ -115,59 +116,50 @@ async def health():
 
 @app.get("/api/v1/projects")
 async def list_projects(user_id: str = Depends(get_current_user)):
-    url = f"{SUPABASE_URL}/rest/v1/projects?user_id=eq.{user_id}&order=created_at.desc"
-    async with httpx.AsyncClient() as client:
-        r = await client.get(url, headers=supa_headers())
-        return {"projects": r.json() if r.status_code == 200 else []}
+    user_projs = [p for p in MOCK_DB["projects"] if p["user_id"] == user_id]
+    return {"projects": user_projs}
 
 @app.post("/api/v1/projects")
 async def create_project(payload: ProjectIn, user_id: str = Depends(get_current_user)):
-    doc = {"id": f"prj_{uuid.uuid4().hex[:12]}", "user_id": user_id, "title": payload.title.strip() or "Untitled Project", "description": payload.description.strip(), "created_at": _now()}
-    async with httpx.AsyncClient() as client:
-        r = await client.post(f"{SUPABASE_URL}/rest/v1/projects", json=doc, headers=supa_headers())
-        if r.status_code >= 400: raise HTTPException(status_code=500, detail="Failed to create project")
-        return {"project": r.json()[0]}
+    new_proj = {"id": f"prj_{uuid.uuid4().hex[:12]}", "user_id": user_id, "title": payload.title.strip() or "Untitled Project", "description": payload.description.strip(), "created_at": _now()}
+    MOCK_DB["projects"].insert(0, new_proj)
+    return {"project": new_proj}
 
 @app.delete("/api/v1/projects/{project_id}")
 async def delete_project(project_id: str, user_id: str = Depends(get_current_user)):
-    async with httpx.AsyncClient() as client:
-        await client.delete(f"{SUPABASE_URL}/rest/v1/projects?id=eq.{project_id}&user_id=eq.{user_id}", headers=supa_headers())
-        return {"status": "deleted"}
+    MOCK_DB["projects"] = [p for p in MOCK_DB["projects"] if not (p["id"] == project_id and p["user_id"] == user_id)]
+    MOCK_DB["files"] = [f for f in MOCK_DB["files"] if f["project_id"] != project_id]
+    return {"status": "deleted"}
 
 @app.get("/api/v1/projects/{project_id}/files")
 async def list_files(project_id: str, user_id: str = Depends(get_current_user)):
-    url = f"{SUPABASE_URL}/rest/v1/files?project_id=eq.{project_id}&user_id=eq.{user_id}&order=updated_at.desc"
-    async with httpx.AsyncClient() as client:
-        r = await client.get(url, headers=supa_headers())
-        return {"files": r.json() if r.status_code == 200 else []}
+    proj_files = [f for f in MOCK_DB["files"] if f["project_id"] == project_id and f["user_id"] == user_id]
+    return {"files": proj_files}
 
 @app.post("/api/v1/projects/{project_id}/files")
 async def create_file(project_id: str, payload: FileIn, user_id: str = Depends(get_current_user)):
-    doc = {"id": f"nt_{uuid.uuid4().hex[:12]}", "user_id": user_id, "project_id": project_id, "title": payload.title, "content": payload.content, "folder": payload.folder, "extension": payload.extension, "created_at": _now(), "updated_at": _now()}
-    async with httpx.AsyncClient() as client:
-        r = await client.post(f"{SUPABASE_URL}/rest/v1/files", json=doc, headers=supa_headers())
-        return {"file": r.json()[0]}
+    new_file = {"id": f"nt_{uuid.uuid4().hex[:12]}", "user_id": user_id, "project_id": project_id, "title": payload.title, "content": payload.content, "folder": payload.folder, "extension": payload.extension, "created_at": _now(), "updated_at": _now()}
+    MOCK_DB["files"].insert(0, new_file)
+    return {"file": new_file}
 
 @app.put("/api/v1/projects/{project_id}/files/{file_id}")
 async def update_file(project_id: str, file_id: str, payload: FilePatch, user_id: str = Depends(get_current_user)):
-    updates = {"updated_at": _now()}
-    if payload.title is not None: updates["title"] = payload.title
-    if payload.content is not None: updates["content"] = payload.content
-    if payload.folder is not None: updates["folder"] = payload.folder
-    if payload.extension is not None: updates["extension"] = payload.extension
-
-    async with httpx.AsyncClient() as client:
-        r = await client.patch(f"{SUPABASE_URL}/rest/v1/files?id=eq.{file_id}&project_id=eq.{project_id}", json=updates, headers=supa_headers())
-        return {"file": r.json()[0] if r.status_code == 200 and len(r.json()) > 0 else {}}
+    for f in MOCK_DB["files"]:
+        if f["id"] == file_id and f["project_id"] == project_id and f["user_id"] == user_id:
+            if payload.title is not None: f["title"] = payload.title
+            if payload.content is not None: f["content"] = payload.content
+            if payload.folder is not None: f["folder"] = payload.folder
+            f["updated_at"] = _now()
+            return {"file": f}
+    raise HTTPException(status_code=404, detail="File not found")
 
 @app.delete("/api/v1/projects/{project_id}/files/{file_id}")
 async def delete_file(project_id: str, file_id: str, user_id: str = Depends(get_current_user)):
-    async with httpx.AsyncClient() as client:
-        await client.delete(f"{SUPABASE_URL}/rest/v1/files?id=eq.{file_id}&project_id=eq.{project_id}", headers=supa_headers())
-        return {"status": "deleted"}
+    MOCK_DB["files"] = [f for f in MOCK_DB["files"] if not (f["id"] == file_id and f["project_id"] == project_id and f["user_id"] == user_id)]
+    return {"status": "deleted"}
 
 @app.get("/api/v1/workspace/calendar")
-async def google_calendar(x_google_token: Annotated[Optional[str], Header()] = None):
+async def google_calendar(x_google_token: Annotated[Optional[str], Header()] = None, user_id: str = Depends(get_current_user)):
     if not x_google_token: return {"sync_status": "unlinked", "events": []}
     
     url = f"https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin={_now()}&maxResults=20&singleEvents=true&orderBy=startTime"
@@ -183,4 +175,4 @@ async def google_calendar(x_google_token: Annotated[Optional[str], Header()] = N
 async def chat(request: Request):
     data = await request.json()
     message = data.get("message", "")
-    return {"response": f"Vex AI: I hear you saying '{message}'. (Backend LLM integration pending)"}
+    return {"response": f"Vex AI received: {message} (AI backend unlinked for UI testing)"}
