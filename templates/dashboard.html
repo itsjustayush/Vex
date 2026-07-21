@@ -1,545 +1,772 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Vex Workspace - Productivity Engine</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Vex Workspace - Productivity Engine</title>
 
-<!-- Tailwind & Fonts -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet"/>
+    <!-- Tailwind & Fonts -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet"/>
 
-<!-- Markdown Parser & PDF Exporter & KaTeX for Math -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- Markdown Parser & PDF Exporter & KaTeX for Math -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
-<script id="tailwind-config">
-    tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-dim": "#131316", "primary": "#63dac3", "background": "#131316", "white": "#FFFFFF", "emerald-glow": "rgba(54, 180, 159, 0.1)", "on-surface-variant": "#bcc9c5", "on-primary": "#00382f", "surface-container-low": "#1b1b1e", "surface-container-highest": "#353438", "secondary": "#b1d34f", "slate-border": "#27272A", "on-surface": "#e4e1e6", "slate-text": "#52525B", "surface-container-high": "#2a2a2d" } } } }
-</script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#131316",
+                        "surface-low": "#1b1b1e",
+                        "surface-high": "#2a2a2d",
+                        "primary": "#63dac3", // Vex Emerald
+                        "on-surface": "#e4e1e6",
+                        "slate-text": "#52525B",
+                        "borders": "#27272A",
+                    }
+                }
+            }
+        }
+    </script>
 
-<style>
-    body { background-color: #131316; color: #e4e1e6; font-family: 'Inter', sans-serif; }
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    .glass-panel { background: rgba(31, 31, 34, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(39, 39, 42, 0.5); }
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272A; border-radius: 10px; }
-    textarea:focus, input:focus { outline: none; }
-</style>
+    <style>
+        body { background-color: #131316; color: #e4e1e6; font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel { background: rgba(31, 31, 34, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(39, 39, 42, 0.5); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272A; border-radius: 10px; }
+        textarea:focus, input:focus { outline: none; }
+    </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-<!-- LEFT SIDEBAR -->
-<aside class="fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-surface-container-low border-r border-slate-border w-[280px]">
-    <div class="p-6 flex items-center space-x-3">
-        <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dataset</span>
-        </div>
-        <div>
-            <h1 class="font-bold text-primary text-base">Vex Workspace</h1>
-            <p class="text-xs text-on-surface-variant">Pro Plan</p>
-        </div>
-    </div>
-    
-    <div class="px-4 mb-6">
-        <button id="open-new-project-modal" class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-primary text-[#00382f] font-bold rounded-lg hover:brightness-110 transition-all shadow-lg shadow-primary/10">
-            <span class="material-symbols-outlined text-sm">add</span>
-            <span class="text-sm">New Project</span>
-        </button>
-    </div>
-    
-    <nav class="flex-1 px-3 space-y-1 custom-scrollbar overflow-y-auto">
-        <button id="nav-dashboard-btn" class="w-full flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-emerald-glow transition-all rounded-r-lg">
-            <span class="material-symbols-outlined">dashboard</span>
-            <span class="text-sm">Dashboard</span>
-        </button>
-        <button id="nav-projects-btn" class="w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all rounded-lg">
-            <span class="material-symbols-outlined">folder_open</span>
-            <span class="text-sm">Projects</span>
-        </button>
-        <a class="w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high transition-all rounded-lg" href="/docs">
-            <span class="material-symbols-outlined">api</span>
-            <span class="text-sm">API Docs</span>
-        </a>
-    </nav>
-
-    <!-- Account Widget -->
-    <div class="p-3 m-3 bg-[#131316] border border-slate-border rounded-xl flex items-center justify-between">
-        <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-8 h-8 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center font-bold text-xs uppercase" id="user-avatar-initial">U</div>
-            <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold text-on-surface truncate" id="user-email-display">Loading...</p>
-                <p class="text-[10px] text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online</p>
+    <!-- LEFT SIDEBAR -->
+    <aside class="fixed left-0 top-0 bottom-0 z-40 flex flex-col bg-surface-low border-r border-borders w-[280px]">
+        <div class="p-6 flex items-center space-x-3">
+            <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dataset</span>
             </div>
-        </div>
-        <a href="/settings" class="text-slate-text hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high" title="Settings"><span class="material-symbols-outlined text-lg">settings</span></a>
-    </div>
-</aside>
-
-<!-- MAIN CONTENT -->
-<main class="flex-1 ml-[280px] flex flex-col h-full bg-background relative overflow-hidden">
-<div class="flex-1 flex overflow-hidden">
-
-    <!-- VIEW 1: DASHBOARD OVERVIEW -->
-    <section id="view-dashboard" class="flex-1 overflow-y-auto custom-scrollbar p-10 flex justify-center">
-        <div class="max-w-[800px] w-full mt-6 space-y-10">
             <div>
-                <span class="flex items-center gap-2 text-xs font-bold text-slate-text tracking-widest uppercase mb-2">
-                    <span class="material-symbols-outlined text-sm">sort</span> Welcome Back
-                </span>
-                <h2 class="text-4xl font-serif text-on-surface mb-2" id="welcome-name" style="font-family:'Instrument Serif', serif">Hi there, ready to think?</h2>
-                <p class="text-sm text-slate-text">Vex ties your notes, calendar, and AI into one flowing surface. Everything below is live — click Projects to start writing.</p>
-            </div>
-
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-3 gap-4">
-                <div class="bg-surface-container-low border border-slate-border rounded-xl p-4">
-                    <p class="text-xs text-slate-text font-bold uppercase tracking-wider mb-2">Projects</p>
-                    <p class="text-3xl text-primary font-bold" id="stat-projects">0</p>
-                </div>
-                <div class="bg-surface-container-low border border-slate-border rounded-xl p-4">
-                    <p class="text-xs text-slate-text font-bold uppercase tracking-wider mb-2">Notes</p>
-                    <p class="text-3xl text-primary font-bold" id="stat-notes">0</p>
-                </div>
-                <div class="bg-surface-container-low border border-slate-border rounded-xl p-4">
-                    <p class="text-xs text-slate-text font-bold uppercase tracking-wider mb-2">Today's Events</p>
-                    <p class="text-3xl text-primary font-bold" id="stat-events">0</p>
-                </div>
-            </div>
-
-            <!-- Quick Capture Box -->
-            <div class="bg-surface-container-low border border-slate-border rounded-xl p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-on-surface">Quick capture</h3>
-                    <button id="quick-capture-save" class="text-xs text-primary font-bold hover:underline">Save to Inbox →</button>
-                </div>
-                <textarea id="quick-capture-text" class="w-full bg-background border border-slate-border rounded-lg p-3 text-sm text-white resize-none" rows="4" placeholder="Drop a thought. Vex will file it under 'Inbox'..."></textarea>
+                <h1 class="font-bold text-primary text-base">Vex Workspace</h1>
+                <p class="text-xs text-on-surface">Pro Plan</p>
             </div>
         </div>
-    </section>
+        
+        <div class="px-4 mb-6">
+            <button id="open-new-project-modal" class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-primary text-background font-bold rounded-lg hover:brightness-110 transition-all shadow-lg shadow-primary/10">
+                <span class="material-symbols-outlined text-sm">add</span>
+                <span class="text-sm">New Project</span>
+            </button>
+        </div>
+        
+        <nav class="flex-1 px-3 space-y-1 custom-scrollbar overflow-y-auto">
+            <button id="nav-dashboard-btn" class="w-full flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-primary/10 transition-all rounded-r-lg">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </button>
+            <button id="nav-projects-btn" class="w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-high transition-all rounded-lg">
+                <span class="material-symbols-outlined">folder_open</span>
+                <span class="text-sm">Projects</span>
+            </button>
+            <a class="w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-high transition-all rounded-lg" href="/docs">
+                <span class="material-symbols-outlined">api</span>
+                <span class="text-sm">API Docs</span>
+            </a>
+        </nav>
 
-    <!-- VIEW 2: PROJECTS & FILE EXPLORER -->
-    <section id="view-projects" class="flex-1 overflow-y-auto custom-scrollbar p-10 hidden">
-        <div class="max-w-[1000px] mx-auto space-y-6">
-            <div class="flex justify-between items-center border-b border-slate-border pb-4">
-                <div>
-                    <h2 class="text-3xl font-bold text-on-surface">Projects Workspace</h2>
-                    <p class="text-sm text-slate-text">Organize projects, files, and markdown notes.</p>
+        <!-- Account Widget -->
+        <div class="p-3 m-3 bg-background border border-borders rounded-xl flex items-center justify-between">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center font-bold text-xs uppercase" id="user-avatar-initial">U</div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-on-surface truncate" id="user-email-display">Loading...</p>
+                    <p class="text-[10px] text-primary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Online</p>
                 </div>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="projects-container"></div>
+            <a href="/settings" class="text-slate-text hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-high" title="Settings"><span class="material-symbols-outlined text-lg">settings</span></a>
+        </div>
+    </aside>
 
-            <div id="project-workspace" class="hidden space-y-6 pt-6 border-t border-slate-border">
-                <div class="flex justify-between items-center bg-surface-container-low p-4 rounded-xl border border-slate-border">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 ml-[280px] flex flex-col h-full bg-background relative overflow-hidden">
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- VIEW 1: DASHBOARD OVERVIEW -->
+            <section id="view-dashboard" class="flex-1 overflow-y-auto custom-scrollbar p-10 flex justify-center">
+                <div class="max-w-[800px] w-full mt-6 space-y-10">
                     <div>
-                        <span class="text-[10px] text-primary font-bold uppercase tracking-widest">Active Workspace</span>
-                        <h3 class="text-2xl font-bold text-on-surface" id="active-project-title">Project Name</h3>
-                    </div>
-                    <div class="flex gap-2">
-                        <button id="add-file-btn" class="px-4 py-2 bg-primary text-[#00382f] font-bold text-xs rounded-lg flex items-center gap-1.5 hover:brightness-110"><span class="material-symbols-outlined text-sm">note_add</span> New Note</button>
-                        <button id="close-project-btn" class="px-3 py-2 bg-surface-container-high text-white font-bold text-xs rounded-lg border border-slate-border">Close</button>
-                        <button id="delete-project-btn" class="px-3 py-2 bg-red-500/10 text-red-400 border border-red-500/20 font-bold text-xs rounded-lg hover:bg-red-500/20">Delete Project</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-12 gap-6">
-                    <div class="col-span-12 md:col-span-4 bg-surface-container-low p-4 rounded-xl border border-slate-border space-y-3">
-                        <h4 class="text-xs font-bold text-slate-text uppercase">Files</h4>
-                        <div id="file-list" class="space-y-2"></div>
+                        <span class="flex items-center gap-2 text-xs font-bold text-slate-text tracking-widest uppercase mb-2">
+                            <span class="material-symbols-outlined text-sm">sort</span> Welcome Back
+                        </span>
+                        <h2 class="text-4xl font-serif text-on-surface mb-2" id="welcome-name" style="font-family:'Instrument Serif', serif">Hi there, ready to think?</h2>
+                        <p class="text-sm text-slate-text">Vex ties your notes, calendar, and AI into one flowing surface. Everything below is live — click Projects to start writing.</p>
                     </div>
 
-                    <div class="col-span-12 md:col-span-8 bg-surface-container-low p-6 rounded-xl border border-slate-border flex flex-col h-[650px]" id="editor-container">
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-surface-low border border-borders rounded-xl p-4">
+                            <p class="text-xs text-slate-text font-bold uppercase tracking-wider mb-2">Projects</p>
+                            <p class="text-3xl text-primary font-bold" id="stat-projects">0</p>
+                        </div>
+                        <div class="bg-surface-low border border-borders rounded-xl p-4">
+                            <p class="text-xs text-slate-text font-bold uppercase tracking-wider mb-2">Notes</p>
+                            <p class="text-3xl text-primary font-bold" id="stat-notes">0</p>
+                        </div>
+                        <div class="bg-surface-low border border-borders rounded-xl p-4">
+                            <p class="text-xs text-slate-text font-bold uppercase tracking-wider mb-2">Today's Events</p>
+                            <p class="text-3xl text-primary font-bold" id="stat-events">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Capture Box -->
+                    <div class="bg-surface-low border border-borders rounded-xl p-6">
                         <div class="flex justify-between items-center mb-4">
-                            <input id="edit-file-title" type="text" class="bg-transparent text-xl font-bold text-on-surface border-b border-transparent focus:border-primary w-full mr-4" placeholder="File title...">
-                            <button id="save-file-btn" class="px-4 py-1.5 bg-primary text-[#00382f] font-bold text-xs rounded-lg flex items-center gap-1 hover:brightness-110"><span class="material-symbols-outlined text-sm">save</span> Save</button>
+                            <h3 class="font-bold text-on-surface">Quick capture</h3>
+                            <button id="quick-capture-save" class="text-xs text-primary font-bold hover:underline">Save to Inbox →</button>
                         </div>
-                        
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <textarea id="quick-capture-text" class="w-full bg-background border border-borders rounded-lg p-3 text-sm text-white resize-none" rows="4" placeholder="Drop a thought. Vex will file it under 'Inbox'..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 2: PROJECTS & FILE EXPLORER -->
+            <section id="view-projects" class="flex-1 overflow-y-auto custom-scrollbar p-10 hidden">
+                <div class="max-w-[1000px] mx-auto space-y-6">
+                    <div class="flex justify-between items-center border-b border-borders pb-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-on-surface">Projects Workspace</h2>
+                            <p class="text-sm text-slate-text">Organize projects, files, and markdown notes.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="projects-container"></div>
+
+                    <div id="project-workspace" class="hidden space-y-6 pt-6 border-t border-borders">
+                        <div class="flex justify-between items-center bg-surface-low p-4 rounded-xl border border-borders">
                             <div>
-                                <label class="text-[10px] text-slate-text uppercase font-bold">Folder</label>
-                                <input id="edit-file-folder" type="text" class="w-full bg-background border border-slate-border rounded-lg p-2 text-xs text-white mt-1" placeholder="General">
+                                <span class="text-[10px] text-primary font-bold uppercase tracking-widest">Active Workspace</span>
+                                <h3 class="text-2xl font-bold text-on-surface" id="active-project-title">Project Name</h3>
                             </div>
-                            <div>
-                                <label class="text-[10px] text-slate-text uppercase font-bold">Extension</label>
-                                <input id="edit-file-ext" type="text" class="w-full bg-background border border-slate-border rounded-lg p-2 text-xs text-white mt-1" placeholder="md">
+                            <div class="flex gap-2">
+                                <button id="add-file-btn" class="px-4 py-2 bg-primary text-background font-bold text-xs rounded-lg flex items-center gap-1.5 hover:brightness-110"><span class="material-symbols-outlined text-sm">note_add</span> New Note</button>
+                                <button id="close-project-btn" class="px-3 py-2 bg-surface-high text-on-surface font-bold text-xs rounded-lg border border-borders">Close</button>
+                                <button id="delete-project-btn" class="px-3 py-2 bg-red-500/10 text-red-400 border border-red-500/20 font-bold text-xs rounded-lg hover:bg-red-500/20">Delete Project</button>
                             </div>
                         </div>
 
-                        <!-- Full Toolbar -->
-                        <div class="flex flex-col border border-slate-border rounded-t-lg bg-background">
-                            <div class="flex items-center gap-1 p-2 border-b border-slate-border overflow-x-auto custom-scrollbar">
-                                <button data-fmt="bold" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Bold (Ctrl+B)"><span class="material-symbols-outlined text-sm">format_bold</span></button>
-                                <button data-fmt="italic" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Italic (Ctrl+I)"><span class="material-symbols-outlined text-sm">format_italic</span></button>
-                                <button data-fmt="strike" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Strikethrough"><span class="material-symbols-outlined text-sm">strikethrough_s</span></button>
-                                <div class="w-px h-4 bg-slate-border mx-1"></div>
-                                <button data-fmt="h1" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high font-bold text-xs" title="Heading 1">H1</button>
-                                <button data-fmt="h2" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high font-bold text-xs" title="Heading 2">H2</button>
-                                <button data-fmt="quote" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Quote"><span class="material-symbols-outlined text-sm">format_quote</span></button>
-                                <div class="w-px h-4 bg-slate-border mx-1"></div>
-                                <button data-fmt="ul" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Bulleted List"><span class="material-symbols-outlined text-sm">format_list_bulleted</span></button>
-                                <button data-fmt="ol" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Numbered List"><span class="material-symbols-outlined text-sm">format_list_numbered</span></button>
-                                <button data-fmt="check" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Checkbox"><span class="material-symbols-outlined text-sm">check_box</span></button>
-                                <div class="w-px h-4 bg-slate-border mx-1"></div>
-                                <button data-fmt="link" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Link (Ctrl+K)"><span class="material-symbols-outlined text-sm">link</span></button>
-                                <button data-fmt="code" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Code Block"><span class="material-symbols-outlined text-sm">code</span></button>
-                                <button data-fmt="latex" class="p-1 text-slate-text hover:text-white rounded hover:bg-surface-container-high" title="Math LaTeX ($$)"><span class="material-symbols-outlined text-sm">functions</span></button>
+                        <div class="grid grid-cols-12 gap-6">
+                            <div class="col-span-12 md:col-span-4 bg-surface-low p-4 rounded-xl border border-borders space-y-3">
+                                <h4 class="text-xs font-bold text-slate-text uppercase">Files</h4>
+                                <div id="file-list" class="space-y-2"></div>
                             </div>
-                            
-                            <div class="flex items-center justify-between p-2">
-                                <div class="flex gap-2">
-                                    <button id="btn-edit-mode" class="px-3 py-1 rounded bg-primary/20 text-primary text-xs font-bold">Edit</button>
-                                    <button id="btn-preview-mode" class="px-3 py-1 rounded text-slate-text hover:text-on-surface text-xs font-bold">Preview</button>
-                                    <button id="btn-export-pdf" class="px-3 py-1 rounded text-slate-text hover:text-on-surface text-xs font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">download</span> Export</button>
+
+                            <div class="col-span-12 md:col-span-8 bg-surface-low p-6 rounded-xl border border-borders flex flex-col h-[650px]" id="editor-container">
+                                <div class="flex justify-between items-center mb-4">
+                                    <input id="edit-file-title" type="text" class="bg-transparent text-xl font-bold text-on-surface border-b border-transparent focus:border-primary w-full mr-4" placeholder="File title...">
+                                    <button id="save-file-btn" class="px-4 py-1.5 bg-primary text-background font-bold text-xs rounded-lg flex items-center gap-1 hover:brightness-110"><span class="material-symbols-outlined text-sm">save</span> Save</button>
                                 </div>
-                            </div>
-                        </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="text-[10px] text-slate-text uppercase font-bold">Folder</label>
+                                        <input id="edit-file-folder" type="text" class="w-full bg-background border border-borders rounded-lg p-2 text-xs text-white mt-1" placeholder="General">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-text uppercase font-bold">Extension</label>
+                                        <input id="edit-file-ext" type="text" class="w-full bg-background border border-borders rounded-lg p-2 text-xs text-white mt-1" placeholder="md">
+                                    </div>
+                                </div>
 
-                        <div class="relative flex-1 flex flex-col min-h-0 border border-slate-border rounded-b-lg overflow-hidden border-t-0">
-                            <textarea id="edit-file-content" class="w-full h-full bg-background p-4 text-sm text-white font-mono resize-none focus:outline-none" placeholder="Write your notes in Markdown. Inline math with $E=mc^2$, block math with $$...$$"></textarea>
-                            <div id="preview-content" class="hidden absolute inset-0 w-full h-full bg-background p-6 overflow-y-auto prose prose-invert max-w-none text-on-surface"></div>
-                        </div>
-                        <div class="flex justify-between text-[10px] text-slate-text mt-2">
-                            <span id="word-count">0 words · 0 chars</span>
-                            <span>Ctrl+S save · Ctrl+B bold · Ctrl+I italic · Ctrl+K link · Ctrl+P preview</span>
+                                <!-- Full Toolbar -->
+                                <div class="flex flex-col border border-borders rounded-t-lg bg-background">
+                                    <div class="flex items-center gap-1 p-2 border-b border-borders overflow-x-auto custom-scrollbar">
+                                        <button data-fmt="bold" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Bold (Ctrl+B)"><span class="material-symbols-outlined text-sm">format_bold</span></button>
+                                        <button data-fmt="italic" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Italic (Ctrl+I)"><span class="material-symbols-outlined text-sm">format_italic</span></button>
+                                        <button data-fmt="strike" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Strikethrough"><span class="material-symbols-outlined text-sm">strikethrough_s</span></button>
+                                        <div class="w-px h-4 bg-borders mx-1"></div>
+                                        <button data-fmt="h1" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high font-bold text-xs" title="Heading 1">H1</button>
+                                        <button data-fmt="h2" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high font-bold text-xs" title="Heading 2">H2</button>
+                                        <button data-fmt="quote" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Quote"><span class="material-symbols-outlined text-sm">format_quote</span></button>
+                                        <div class="w-px h-4 bg-borders mx-1"></div>
+                                        <button data-fmt="ul" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Bulleted List"><span class="material-symbols-outlined text-sm">format_list_bulleted</span></button>
+                                        <button data-fmt="ol" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Numbered List"><span class="material-symbols-outlined text-sm">format_list_numbered</span></button>
+                                        <button data-fmt="check" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Checkbox"><span class="material-symbols-outlined text-sm">check_box</span></button>
+                                        <div class="w-px h-4 bg-borders mx-1"></div>
+                                        <button data-fmt="link" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Link (Ctrl+K)"><span class="material-symbols-outlined text-sm">link</span></button>
+                                        <button data-fmt="code" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Code Block"><span class="material-symbols-outlined text-sm">code</span></button>
+                                        <button data-fmt="latex" class="p-1 text-slate-text hover:text-on-surface rounded hover:bg-surface-high" title="Math LaTeX ($$)"><span class="material-symbols-outlined text-sm">functions</span></button>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between p-2">
+                                        <div class="flex gap-2">
+                                            <button id="btn-edit-mode" class="px-3 py-1 text-xs font-bold rounded-lg bg-primary text-background">Edit</button>
+                                            <button id="btn-preview-mode" class="px-3 py-1 text-xs font-bold rounded-lg text-slate-text hover:bg-surface-high">Preview (MD)</button>
+                                        </div>
+                                        <div class="relative">
+                                            <button id="export-dropdown-btn" class="px-3 py-1 text-xs font-bold rounded-lg text-slate-text hover:bg-surface-high flex items-center gap-1">
+                                                Export <span class="material-symbols-outlined text-sm">arrow_drop_down</span>
+                                            </button>
+                                            <div id="export-dropdown-menu" class="absolute right-0 mt-2 w-40 bg-surface-low border border-borders rounded-lg shadow-lg hidden z-10">
+                                                <button class="block w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-high" id="export-copy">Copy</button>
+                                                <button class="block w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-high" id="export-txt">TXT/MD Download</button>
+                                                <button class="block w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-high" id="export-pdf">PDF Download</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <textarea id="note-editor" class="flex-1 w-full bg-surface-high p-4 text-sm text-on-surface rounded-b-lg resize-none custom-scrollbar" placeholder="Start writing your note in Markdown or LaTeX..."></textarea>
+                                <div id="note-preview" class="flex-1 w-full bg-surface-high p-4 text-sm text-on-surface rounded-b-lg custom-scrollbar prose prose-invert hidden"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- RIGHT SIDEBAR: CALENDAR & AI -->
-    <aside id="right-panel" class="w-[360px] border-l border-slate-border bg-[#0e0e11] flex flex-col relative transition-all duration-300">
-        <button id="toggle-right-panel" class="absolute -left-3 top-6 bg-surface-container-high border border-slate-border text-slate-text hover:text-primary rounded-full p-1 z-50">
-            <span class="material-symbols-outlined text-sm" id="toggle-icon">chevron_right</span>
-        </button>
-
-        <div class="p-4 border-b border-slate-border flex justify-between bg-surface-container-low">
-            <div class="flex gap-2">
-                <button id="tab-btn-calendar" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">calendar_month</span> Calendar</button>
-                <button id="tab-btn-ai" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-text hover:text-on-surface flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">smart_toy</span> Vex AI</button>
-            </div>
+            </section>
         </div>
 
-        <div id="tab-content-calendar" class="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-6">
-            <div class="flex justify-between items-center">
-                <h4 class="font-bold text-sm text-on-surface" id="calendar-month-year">Calendar</h4>
-                <span id="sync-status-badge" class="text-[10px] text-slate-text bg-surface-container-high border border-slate-border px-2 py-0.5 rounded-full flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-slate-text"></span> Not linked</span>
-            </div>
-            <div class="grid grid-cols-7 gap-1 text-center text-xs" id="calendar-days-grid"></div>
-            <div class="space-y-3 pt-4 border-t border-slate-border">
-                <div class="flex justify-between">
-                    <h5 class="text-xs font-bold text-slate-text uppercase">Upcoming Events</h5>
-                    <button id="reconnect-google" class="text-[10px] text-primary hover:underline hidden">Reconnect</button>
+        <!-- New Project Modal -->
+        <div id="new-project-modal" class="fixed inset-0 bg-background bg-opacity-75 flex items-center justify-center z-50 hidden">
+            <div class="bg-surface-low p-8 rounded-lg shadow-xl border border-borders w-full max-w-md">
+                <h3 class="text-xl font-bold text-on-surface mb-4">Create New Project</h3>
+                <input type="text" id="new-project-title" class="w-full bg-background border border-borders rounded-lg p-3 mb-4 text-on-surface" placeholder="Project Title"/>
+                <textarea id="new-project-description" class="w-full bg-background border border-borders rounded-lg p-3 mb-4 text-on-surface" rows="3" placeholder="Project Description (Optional)"></textarea>
+                <div class="flex justify-end gap-3">
+                    <button id="cancel-new-project" class="px-4 py-2 text-slate-text hover:text-on-surface rounded-lg">Cancel</button>
+                    <button id="create-project-btn" class="px-4 py-2 bg-primary text-background font-bold rounded-lg">Create Project</button>
                 </div>
-                <div id="upcoming-events-list" class="space-y-2"><p class="text-xs text-slate-text">Loading...</p></div>
             </div>
         </div>
+    </main>
 
-        <div id="tab-content-ai" class="flex-1 flex flex-col p-4 hidden">
-            <div id="chat-history" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 mb-4">
-                <div class="flex flex-col items-start"><div class="bg-surface-container-high rounded-2xl rounded-tl-none p-3 max-w-[90%]"><p class="text-xs text-on-surface-variant">Hello! I am Vex.</p></div></div>
+    <!-- RIGHT SIDEBAR -->
+    <aside class="fixed right-0 top-0 bottom-0 z-30 flex flex-col bg-surface-low border-l border-borders w-[360px] transform translate-x-0 transition-transform duration-300 ease-in-out" id="right-sidebar">
+        <div class="p-4 flex items-center justify-between border-b border-borders">
+            <div class="flex gap-4">
+                <button id="tab-calendar" class="text-on-surface font-bold py-2 border-b-2 border-primary">Calendar</button>
+                <button id="tab-vex-ai" class="text-slate-text font-bold py-2 hover:text-on-surface">Vex AI</button>
             </div>
-            <div class="relative">
-                <textarea id="chat-input" class="w-full bg-background border border-slate-border rounded-xl p-3 text-xs focus:border-primary resize-none text-white" placeholder="Ask Vex AI..." rows="2"></textarea>
-                <button id="send-btn" class="absolute bottom-3 right-3 text-primary hover:text-white"><span class="material-symbols-outlined text-sm">send</span></button>
+            <button id="toggle-right-sidebar" class="text-slate-text hover:text-on-surface p-1 rounded-lg hover:bg-surface-high">
+                <span class="material-symbols-outlined">arrow_forward_ios</span>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4">
+            <!-- Calendar Tab Content -->
+            <div id="calendar-content">
+                <h3 class="text-xl font-bold text-on-surface mb-4">Google Calendar</h3>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs mb-4"></div>
+                <div id="upcoming-events" class="space-y-2"></div>
+            </div>
+
+            <!-- Vex AI Tab Content -->
+            <div id="vex-ai-content" class="hidden h-full flex flex-col">
+                <h3 class="text-xl font-bold text-on-surface mb-4">Vex AI Chat</h3>
+                <div id="chat-history" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 p-2 bg-background rounded-lg mb-4"></div>
+                <div class="flex">
+                    <textarea id="ai-chat-input" class="flex-1 bg-background border border-borders rounded-l-lg p-3 text-sm text-on-surface resize-none" rows="2" placeholder="Ask Vex AI..."></textarea>
+                    <button id="ai-chat-send" class="bg-primary text-background px-4 rounded-r-lg"><span class="material-symbols-outlined">send</span></button>
+                </div>
             </div>
         </div>
     </aside>
 
-</div>
-</main>
+    <script>
+        // Supabase Client Initialization
+        const SUPABASE_URL = "{{ supabase_url }}";
+        const SUPABASE_ANON_KEY = "{{ supabase_anon_key }}";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-<!-- PROJECT MODAL -->
-<div id="new-project-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-    <div class="glass-panel p-6 rounded-2xl max-w-md w-full mx-4 space-y-4 border border-slate-border">
-        <div class="flex justify-between items-center">
-            <h3 class="font-bold text-lg text-on-surface">Create New Project</h3>
-            <button id="close-modal" class="text-slate-text hover:text-on-surface"><span class="material-symbols-outlined">close</span></button>
-        </div>
-        <div class="space-y-3">
-            <div><label class="text-xs font-bold text-slate-text uppercase">Project Name</label><input id="project-title-input" type="text" class="w-full mt-1 bg-surface-container-low border border-slate-border rounded-lg p-2.5 text-sm focus:border-primary text-white"></div>
-            <div><label class="text-xs font-bold text-slate-text uppercase">Description</label><textarea id="project-desc-input" class="w-full mt-1 bg-surface-container-low border border-slate-border rounded-lg p-2.5 text-sm focus:border-primary text-white" rows="3"></textarea></div>
-        </div>
-        <button id="save-project-btn" class="w-full py-2.5 bg-primary text-[#00382f] font-bold rounded-lg hover:brightness-110">Save Project</button>
-    </div>
-</div>
+        // Global state
+        let currentUserId = null;
+        let activeProjectId = null;
+        let activeFileId = null;
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = '{{ supabase_url }}';
-    const SUPABASE_ANON_KEY = '{{ supabase_anon_key }}';
-    const API = '/api/v1';
-
-    let supa = null;
-    let jwtToken = null;
-    let currentUserId = null;
-    let googleOAuthToken = null;
-    let projects = [];
-    let activeProjectId = null;
-    let activeFileId = null;
-
-    window.onload = async () => {
-        if (!SUPABASE_URL) return alert("Missing Supabase Keys in backend.");
-        supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        const { data: { session } } = await supa.auth.getSession();
-        if (!session) { window.location.href = '/login'; return; }
-        
-        jwtToken = session.access_token;
-        currentUserId = session.user.id;
-        googleOAuthToken = session.provider_token || null;
-        
-        document.getElementById('user-email-display').innerText = session.user.email;
-        document.getElementById('user-avatar-initial').innerText = (session.user.email[0] || 'U').toUpperCase();
-        
-        const first = session.user.email.split('@')[0];
-        document.getElementById('welcome-name').innerText = `Hi ${first.charAt(0).toUpperCase() + first.slice(1)}, ready to think?`;
-
-        await fetchProjects();
-        await fetchGoogleCalendarEvents();
-        updateWordCount();
-    };
-
-    // --- QUICK CAPTURE ---
-    document.getElementById('quick-capture-save').onclick = async () => {
-        const text = document.getElementById('quick-capture-text').value.trim();
-        if (!text) return;
-        
-        let inbox = projects.find(p => p.title.toLowerCase() === 'inbox');
-        if (!inbox) {
-            const r = await fetch(`${API}/projects`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` }, body: JSON.stringify({ title: 'Inbox', description: 'Quick captures' }) });
-            const data = await r.json();
-            inbox = data.project;
+        // Utility to get JWT token from Supabase session
+        async function getAuthToken() {
+            const { data } = await supabase.auth.getSession();
+            return data.session ? data.session.access_token : null;
         }
 
-        await fetch(`${API}/projects/${inbox.id}/files`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` }, body: JSON.stringify({ title: text.split('\n')[0].slice(0,30) || 'Capture', content: text, folder: 'Inbox', extension: 'md' }) });
-        
-        document.getElementById('quick-capture-text').value = '';
-        alert('Saved to Inbox');
-        await fetchProjects();
-    };
-
-    // --- VIEW SWITCHING ---
-    const switchClass = (btn, active) => btn.className = active ? "w-full flex items-center space-x-3 px-3 py-2 text-on-surface font-bold border-l-2 border-primary bg-emerald-glow rounded-r-lg" : "w-full flex items-center space-x-3 px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-container-high rounded-lg";
-    
-    document.getElementById('nav-dashboard-btn').onclick = () => {
-        document.getElementById('view-dashboard').classList.remove('hidden');
-        document.getElementById('view-projects').classList.add('hidden');
-        switchClass(document.getElementById('nav-dashboard-btn'), true);
-        switchClass(document.getElementById('nav-projects-btn'), false);
-    };
-
-    document.getElementById('nav-projects-btn').onclick = () => {
-        document.getElementById('view-projects').classList.remove('hidden');
-        document.getElementById('view-dashboard').classList.add('hidden');
-        switchClass(document.getElementById('nav-projects-btn'), true);
-        switchClass(document.getElementById('nav-dashboard-btn'), false);
-    };
-
-    // --- CRUD: PROJECTS ---
-    async function fetchProjects() {
-        const res = await fetch(`${API}/projects`, { headers: { 'Authorization': `Bearer ${jwtToken}` } });
-        const data = await res.json();
-        projects = data.projects || [];
-        
-        document.getElementById('stat-projects').innerText = projects.length;
-        
-        const container = document.getElementById('projects-container');
-        container.innerHTML = '';
-        projects.forEach(p => {
-            const card = document.createElement('div');
-            card.className = "glass-panel p-5 rounded-xl space-y-3 cursor-pointer hover:border-primary/50 transition-all";
-            card.innerHTML = `<div class="flex justify-between items-start"><span class="text-[10px] tracking-widest uppercase font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">Workspace</span><span class="material-symbols-outlined text-slate-text text-sm">arrow_outward</span></div><h3 class="font-bold text-lg text-on-surface">${p.title}</h3><p class="text-xs text-slate-text">${p.description}</p>`;
-            card.onclick = () => openProjectWorkspace(p);
-            container.appendChild(card);
-        });
-    }
-
-    async function openProjectWorkspace(project) {
-        activeProjectId = project.id;
-        document.getElementById('project-workspace').classList.remove('hidden');
-        document.getElementById('active-project-title').innerText = project.title;
-        await fetchProjectFiles(project.id);
-    }
-    
-    document.getElementById('close-project-btn').onclick = () => {
-        document.getElementById('project-workspace').classList.add('hidden');
-    };
-
-    // --- CRUD: FILES ---
-    async function fetchProjectFiles(projectId) {
-        const res = await fetch(`${API}/projects/${projectId}/files`, { headers: { 'Authorization': `Bearer ${jwtToken}` } });
-        const data = await res.json();
-        const fileList = document.getElementById('file-list');
-        fileList.innerHTML = '';
-        
-        document.getElementById('stat-notes').innerText = data.files ? data.files.length : 0;
-
-        (data.files || []).forEach((f, idx) => {
-            const item = document.createElement('div');
-            item.className = `p-2.5 rounded-lg border border-slate-border cursor-pointer flex justify-between items-center text-xs ${activeFileId === f.id ? 'bg-emerald-glow border-primary/40' : 'bg-background hover:bg-surface-container-high'}`;
-            item.innerHTML = `<div><p class="font-bold text-on-surface truncate">${f.title}</p><span class="text-[10px] text-slate-text">${f.folder || 'General'}</span></div><button class="text-slate-text hover:text-red-400" onclick="deleteFile(event, '${f.id}')"><span class="material-symbols-outlined text-sm">delete</span></button>`;
-            item.onclick = (e) => { if (!e.target.closest('button')) selectFileToEdit(f); };
-            fileList.appendChild(item);
-            if (idx === 0 && !activeFileId) selectFileToEdit(f);
-        });
-    }
-
-    function selectFileToEdit(file) {
-        activeFileId = file.id;
-        document.getElementById('edit-file-title').value = file.title;
-        document.getElementById('edit-file-folder').value = file.folder || 'General';
-        document.getElementById('edit-file-ext').value = file.extension || 'md';
-        document.getElementById('edit-file-content').value = file.content || '';
-        document.getElementById('btn-edit-mode').click(); 
-        updateWordCount();
-        fetchProjectFiles(activeProjectId); // Re-render to highlight active file
-    }
-
-    document.getElementById('save-file-btn').onclick = async () => {
-        if (!activeProjectId || !activeFileId) return;
-        const payload = {
-            title: document.getElementById('edit-file-title').value,
-            folder: document.getElementById('edit-file-folder').value,
-            extension: document.getElementById('edit-file-ext').value,
-            content: document.getElementById('edit-file-content').value
-        };
-        await fetch(`${API}/projects/${activeProjectId}/files/${activeFileId}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` }, body: JSON.stringify(payload)
-        });
-        await fetchProjectFiles(activeProjectId);
-        const btn = document.getElementById('save-file-btn');
-        btn.innerHTML = '<span class="material-symbols-outlined text-sm">check</span> Saved';
-        setTimeout(() => btn.innerHTML = '<span class="material-symbols-outlined text-sm">save</span> Save', 2000);
-    };
-
-    async function deleteFile(e, fileId) {
-        e.stopPropagation();
-        await fetch(`${API}/projects/${activeProjectId}/files/${fileId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${jwtToken}` } });
-        activeFileId = null;
-        await fetchProjectFiles(activeProjectId);
-    }
-
-    document.getElementById('delete-project-btn').onclick = async () => {
-        if (confirm("Delete project and all notes?")) {
-            await fetch(`${API}/projects/${activeProjectId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${jwtToken}` } });
-            document.getElementById('project-workspace').classList.add('hidden');
-            await fetchProjects();
+        // Auth Guard
+        async function checkAuth() {
+            const { data, error } = await supabase.auth.getSession();
+            if (error || !data.session) {
+                window.location.href = "/login";
+            } else {
+                currentUserId = data.session.user.id;
+                document.getElementById("user-email-display").textContent = data.session.user.email;
+                document.getElementById("user-avatar-initial").textContent = data.session.user.email[0].toUpperCase();
+                fetchProjects();
+                fetchGoogleCalendarEvents();
+            }
         }
-    };
+        window.onload = checkAuth;
 
-    // New Project Modal
-    const modal = document.getElementById('new-project-modal');
-    document.getElementById('open-new-project-modal').onclick = () => modal.classList.remove('hidden');
-    document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
-    document.getElementById('save-project-btn').onclick = async () => {
-        await fetch(`${API}/projects`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
-            body: JSON.stringify({ title: document.getElementById('project-title-input').value, description: document.getElementById('project-desc-input').value })
-        });
-        modal.classList.add('hidden');
-        await fetchProjects();
-    };
+        // API Helper
+        async function callApi(method, url, body = null) {
+            const token = await getAuthToken();
+            const headers = {
+                "Content-Type": "application/json",
+            };
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
 
-    // --- EDITOR TOOLBAR & EXPORT ---
-    const ta = document.getElementById('edit-file-content');
-    
-    function insertFormat(before, after=before) {
-        const start = ta.selectionStart, end = ta.selectionEnd;
-        const sel = ta.value.substring(start, end);
-        ta.value = ta.value.substring(0, start) + before + sel + after + ta.value.substring(end);
-        ta.focus(); ta.selectionStart = start + before.length; ta.selectionEnd = end + before.length;
-        updateWordCount();
-    }
-    
-    document.querySelectorAll('[data-fmt]').forEach(btn => {
-        btn.onclick = () => {
-            const f = btn.getAttribute('data-fmt');
-            if (f==='bold') insertFormat('**');
-            else if (f==='italic') insertFormat('*');
-            else if (f==='strike') insertFormat('~~');
-            else if (f==='code') insertFormat('`');
-            else if (f==='latex') insertFormat('$$','$$');
-            else if (f==='h1') insertFormat('# ', '');
-            else if (f==='h2') insertFormat('## ', '');
-            else if (f==='quote') insertFormat('> ', '');
-            else if (f==='ul') insertFormat('- ', '');
-            else if (f==='ol') insertFormat('1. ', '');
-            else if (f==='check') insertFormat('- [ ] ', '');
-            else if (f==='link') { const u = prompt('URL:','https://'); if(u) insertFormat('[', ']('+u+')'); }
-        };
-    });
+            const options = {
+                method: method,
+                headers: headers,
+            };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
 
-    function updateWordCount() {
-        const text = ta.value.trim();
-        document.getElementById('word-count').innerText = `${text ? text.split(/\s+/).length : 0} words · ${text.length} chars`;
-    }
-    ta.addEventListener('input', updateWordCount);
-
-    document.getElementById('btn-preview-mode').onclick = () => {
-        const p = document.getElementById('preview-content');
-        p.innerHTML = marked.parse(ta.value);
-        if (window.renderMathInElement) window.renderMathInElement(p, { delimiters: [{left:'$$', right:'$$', display:true}, {left:'$', right:'$', display:false}]});
-        
-        ta.classList.add('hidden'); p.classList.remove('hidden');
-        document.getElementById('btn-preview-mode').className = "px-3 py-1 rounded bg-primary/20 text-primary text-xs font-bold";
-        document.getElementById('btn-edit-mode').className = "px-3 py-1 rounded text-slate-text hover:text-on-surface text-xs font-bold";
-    };
-
-    document.getElementById('btn-edit-mode').onclick = () => {
-        document.getElementById('preview-content').classList.add('hidden'); ta.classList.remove('hidden');
-        document.getElementById('btn-edit-mode').className = "px-3 py-1 rounded bg-primary/20 text-primary text-xs font-bold";
-        document.getElementById('btn-preview-mode').className = "px-3 py-1 rounded text-slate-text hover:text-on-surface text-xs font-bold";
-    };
-
-    document.getElementById('btn-export-pdf').onclick = () => {
-        const div = document.createElement('div'); div.className = 'prose p-8'; div.innerHTML = marked.parse(ta.value);
-        html2pdf().set({ margin: 1, filename: `${document.getElementById('edit-file-title').value}.pdf`, html2canvas: { scale: 2 } }).from(div).save();
-    };
-
-    // --- GOOGLE CALENDAR ---
-    async function fetchGoogleCalendarEvents() {
-        const headers = { 'Authorization': `Bearer ${jwtToken}` };
-        if (googleOAuthToken) headers['X-Google-Token'] = googleOAuthToken;
-        
-        const res = await fetch(`${API}/workspace/calendar`, { headers });
-        const data = await res.json();
-        
-        const badge = document.getElementById('sync-status-badge');
-        if (data.sync_status === 'active') {
-            badge.className = 'text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex gap-1 items-center';
-            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Synced';
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `API Error: ${response.status}`);
+            }
+            return response.json();
         }
 
-        const list = document.getElementById('upcoming-events-list');
-        list.innerHTML = '';
-        document.getElementById('stat-events').innerText = data.events ? data.events.length : 0;
+        // UI State Management
+        const viewDashboard = document.getElementById("view-dashboard");
+        const viewProjects = document.getElementById("view-projects");
+        const navDashboardBtn = document.getElementById("nav-dashboard-btn");
+        const navProjectsBtn = document.getElementById("nav-projects-btn");
+        const projectsContainer = document.getElementById("projects-container");
+        const projectWorkspace = document.getElementById("project-workspace");
+        const activeProjectTitle = document.getElementById("active-project-title");
+        const fileList = document.getElementById("file-list");
+        const noteEditor = document.getElementById("note-editor");
+        const notePreview = document.getElementById("note-preview");
+        const editFileTitle = document.getElementById("edit-file-title");
+        const editFileFolder = document.getElementById("edit-file-folder");
+        const editFileExt = document.getElementById("edit-file-ext");
+        const statProjects = document.getElementById("stat-projects");
+        const statNotes = document.getElementById("stat-notes");
 
-        if (data.events && data.events.length > 0) {
-            data.events.forEach(evt => {
-                const timeStr = evt.start_time ? new Date(evt.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'All Day';
-                list.innerHTML += `<div class="p-3 bg-surface-container-low rounded-xl border border-slate-border space-y-1"><div class="flex justify-between items-center"><span class="text-xs font-bold text-primary truncate">${evt.title}</span><span class="text-[10px] text-slate-text shrink-0 ml-2">${timeStr}</span></div><p class="text-[11px] text-on-surface-variant truncate">${evt.description || 'Google Calendar Event'}</p></div>`;
+        function showView(viewId) {
+            viewDashboard.classList.add("hidden");
+            viewProjects.classList.add("hidden");
+            navDashboardBtn.classList.remove("border-l-2", "border-primary", "bg-primary/10", "text-on-surface");
+            navDashboardBtn.classList.add("text-slate-text", "hover:text-on-surface", "hover:bg-surface-high");
+            navProjectsBtn.classList.remove("border-l-2", "border-primary", "bg-primary/10", "text-on-surface");
+            navProjectsBtn.classList.add("text-slate-text", "hover:text-on-surface", "hover:bg-surface-high");
+
+            document.getElementById(viewId).classList.remove("hidden");
+            if (viewId === "view-dashboard") {
+                navDashboardBtn.classList.add("border-l-2", "border-primary", "bg-primary/10", "text-on-surface");
+                navDashboardBtn.classList.remove("text-slate-text", "hover:text-on-surface", "hover:bg-surface-high");
+            } else if (viewId === "view-projects") {
+                navProjectsBtn.classList.add("border-l-2", "border-primary", "bg-primary/10", "text-on-surface");
+                navProjectsBtn.classList.remove("text-slate-text", "hover:text-on-surface", "hover:bg-surface-high");
+            }
+        }
+
+        navDashboardBtn.addEventListener("click", () => showView("view-dashboard"));
+        navProjectsBtn.addEventListener("click", () => showView("view-projects"));
+
+        // Projects CRUD
+        async function fetchProjects() {
+            try {
+                const data = await callApi("GET", "/api/v1/projects");
+                projectsContainer.innerHTML = "";
+                statProjects.textContent = data.projects.length;
+                if (data.projects.length === 0) {
+                    projectsContainer.innerHTML = 
+                        `<div class="col-span-full text-center text-slate-text p-10 border border-borders rounded-xl">
+                            <p class="mb-2">No projects found. Create one to get started!</p>
+                            <button class="px-4 py-2 bg-primary text-background font-bold rounded-lg" id="create-first-project-btn">Create First Project</button>
+                        </div>`;
+                    document.getElementById("create-first-project-btn").addEventListener("click", () => newProjectModal.classList.remove("hidden"));
+                }
+                data.projects.forEach(project => {
+                    const projectCard = document.createElement("div");
+                    projectCard.className = "glass-panel p-4 rounded-xl cursor-pointer hover:border-primary transition-colors";
+                    projectCard.innerHTML = `
+                        <h4 class="font-bold text-on-surface">${project.title}</h4>
+                        <p class="text-xs text-slate-text mb-2">${project.description || "No description"}</p>
+                        <p class="text-[10px] text-slate-text">Created: ${new Date(project.created_at).toLocaleDateString()}</p>
+                    `;
+                    projectCard.addEventListener("click", () => openProject(project.id, project.title));
+                    projectsContainer.appendChild(projectCard);
+                });
+            } catch (error) {
+                console.error("Error fetching projects:", error);
+                alert("Failed to load projects: " + error.message);
+            }
+        }
+
+        async function createProject() {
+            const title = document.getElementById("new-project-title").value;
+            const description = document.getElementById("new-project-description").value;
+            if (!title) {
+                alert("Project title cannot be empty.");
+                return;
+            }
+            try {
+                await callApi("POST", "/api/v1/projects", { title, description });
+                newProjectModal.classList.add("hidden");
+                document.getElementById("new-project-title").value = "";
+                document.getElementById("new-project-description").value = "";
+                fetchProjects();
+            } catch (error) {
+                console.error("Error creating project:", error);
+                alert("Failed to create project: " + error.message);
+            }
+        }
+
+        async function deleteProject() {
+            if (!activeProjectId) return;
+            if (!confirm("Are you sure you want to delete this project and all its files?")) return;
+            try {
+                await callApi("DELETE", `/api/v1/projects/${activeProjectId}`);
+                activeProjectId = null;
+                projectWorkspace.classList.add("hidden");
+                fetchProjects();
+                alert("Project deleted successfully.");
+            } catch (error) {
+                console.error("Error deleting project:", error);
+                alert("Failed to delete project: " + error.message);
+            }
+        }
+
+        function openProject(projectId, projectTitle) {
+            activeProjectId = projectId;
+            activeProjectTitle.textContent = projectTitle;
+            projectWorkspace.classList.remove("hidden");
+            fetchFiles(projectId);
+        }
+
+        function closeProject() {
+            activeProjectId = null;
+            activeFileId = null;
+            projectWorkspace.classList.add("hidden");
+            // Clear editor content
+            editFileTitle.value = "";
+            editFileFolder.value = "General";
+            editFileExt.value = "md";
+            noteEditor.value = "";
+            notePreview.innerHTML = "";
+            showView("view-projects"); // Stay on projects view
+        }
+
+        // Files CRUD
+        async function fetchFiles(projectId) {
+            try {
+                const data = await callApi("GET", `/api/v1/projects/${projectId}/files`);
+                fileList.innerHTML = "";
+                statNotes.textContent = data.files.length;
+                if (data.files.length === 0) {
+                    fileList.innerHTML = 
+                        `<div class="text-center text-slate-text p-4 border border-borders rounded-xl">
+                            <p>No notes in this project. Create one!</p>
+                        </div>`;
+                }
+                data.files.forEach(file => {
+                    const fileItem = document.createElement("button");
+                    fileItem.className = "w-full text-left px-3 py-2 text-slate-text hover:text-on-surface hover:bg-surface-high transition-all rounded-lg flex items-center gap-2";
+                    fileItem.innerHTML = `
+                        <span class="material-symbols-outlined text-sm">description</span>
+                        <span class="text-sm flex-1 truncate">${file.title}</span>
+                    `;
+                    fileItem.addEventListener("click", () => openFile(file.id, file.title, file.content, file.folder, file.extension));
+                    fileList.appendChild(fileItem);
+                });
+            } catch (error) {
+                console.error("Error fetching files:", error);
+                alert("Failed to load files: " + error.message);
+            }
+        }
+
+        async function createFile() {
+            if (!activeProjectId) return;
+            try {
+                const newFile = await callApi("POST", `/api/v1/projects/${activeProjectId}/files`, {});
+                openFile(newFile.file.id, newFile.file.title, newFile.file.content, newFile.file.folder, newFile.file.extension);
+                fetchFiles(activeProjectId);
+            } catch (error) {
+                console.error("Error creating file:", error);
+                alert("Failed to create file: " + error.message);
+            }
+        }
+
+        async function saveFile() {
+            if (!activeFileId || !activeProjectId) return;
+            const title = editFileTitle.value;
+            const content = noteEditor.value;
+            const folder = editFileFolder.value;
+            const extension = editFileExt.value;
+
+            try {
+                await callApi("PUT", `/api/v1/projects/${activeProjectId}/files/${activeFileId}`, { title, content, folder, extension });
+                alert("File saved successfully!");
+                fetchFiles(activeProjectId); // Refresh file list to show updated title
+            } catch (error) {
+                console.error("Error saving file:", error);
+                alert("Failed to save file: " + error.message);
+            }
+        }
+
+        async function deleteFile(fileId) {
+            if (!activeProjectId || !fileId) return;
+            if (!confirm("Are you sure you want to delete this file?")) return;
+            try {
+                await callApi("DELETE", `/api/v1/projects/${activeProjectId}/files/${fileId}`);
+                if (activeFileId === fileId) {
+                    activeFileId = null;
+                    editFileTitle.value = "";
+                    editFileFolder.value = "General";
+                    editFileExt.value = "md";
+                    noteEditor.value = "";
+                    notePreview.innerHTML = "";
+                }
+                fetchFiles(activeProjectId);
+                alert("File deleted successfully.");
+            } catch (error) {
+                console.error("Error deleting file:", error);
+                alert("Failed to delete file: " + error.message);
+            }
+        }
+
+        function openFile(fileId, title, content, folder, extension) {
+            activeFileId = fileId;
+            editFileTitle.value = title;
+            editFileFolder.value = folder;
+            editFileExt.value = extension;
+            noteEditor.value = content;
+            // Ensure editor is in edit mode when opening a file
+            btnEditMode.click();
+        }
+
+        // Event Listeners for Project/File Actions
+        document.getElementById("open-new-project-modal").addEventListener("click", () => newProjectModal.classList.remove("hidden"));
+        document.getElementById("cancel-new-project").addEventListener("click", () => newProjectModal.classList.add("hidden"));
+        document.getElementById("create-project-btn").addEventListener("click", createProject);
+        document.getElementById("delete-project-btn").addEventListener("click", deleteProject);
+        document.getElementById("close-project-btn").addEventListener("click", closeProject);
+        document.getElementById("add-file-btn").addEventListener("click", createFile);
+        document.getElementById("save-file-btn").addEventListener("click", saveFile);
+
+        // Editor Functionality
+        const btnEditMode = document.getElementById("btn-edit-mode");
+        const btnPreviewMode = document.getElementById("btn-preview-mode");
+
+        btnEditMode.addEventListener("click", () => {
+            noteEditor.classList.remove("hidden");
+            notePreview.classList.add("hidden");
+            btnEditMode.classList.add("bg-primary", "text-background");
+            btnEditMode.classList.remove("text-slate-text", "hover:bg-surface-high");
+            btnPreviewMode.classList.remove("bg-primary", "text-background");
+            btnPreviewMode.classList.add("text-slate-text", "hover:bg-surface-high");
+        });
+
+        btnPreviewMode.addEventListener("click", () => {
+            noteEditor.classList.add("hidden");
+            notePreview.classList.remove("hidden");
+            notePreview.innerHTML = marked.parse(noteEditor.value);
+            renderMathInElement(notePreview, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                ],
+                throwOnError : false
             });
-        } else {
-            list.innerHTML = '<p class="text-xs text-slate-text italic">No events found.</p>';
+            btnPreviewMode.classList.add("bg-primary", "text-background");
+            btnPreviewMode.classList.remove("text-slate-text", "hover:bg-surface-high");
+            btnEditMode.classList.remove("bg-primary", "text-background");
+            btnEditMode.classList.add("text-slate-text", "hover:bg-surface-high");
+        });
+
+        // Toolbar Formatting
+        document.querySelectorAll("[data-fmt]").forEach(button => {
+            button.addEventListener("click", () => {
+                const fmt = button.dataset.fmt;
+                let start = noteEditor.selectionStart;
+                let end = noteEditor.selectionEnd;
+                let selectedText = noteEditor.value.substring(start, end);
+                let replacement = selectedText;
+
+                switch (fmt) {
+                    case "bold": replacement = `**${selectedText}**`; break;
+                    case "italic": replacement = `*${selectedText}*`; break;
+                    case "strike": replacement = `~~${selectedText}~~`; break;
+                    case "h1": replacement = `# ${selectedText}\n`; break;
+                    case "h2": replacement = `## ${selectedText}\n`; break;
+                    case "quote": replacement = `> ${selectedText.split('\n').join('\n> ')}\n`; break;
+                    case "ul": replacement = selectedText.split('\n').map(line => `- ${line}`).join('\n') + '\n'; break;
+                    case "ol": replacement = selectedText.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n') + '\n'; break;
+                    case "check": replacement = selectedText.split('\n').map(line => `- [ ] ${line}`).join('\n') + '\n'; break;
+                    case "link":
+                        const url = prompt("Enter URL:");
+                        if (url) replacement = `[${selectedText || "Link Text"}](${url})`;
+                        break;
+                    case "code": replacement = `\`\`\`\n${selectedText}\n\`\`\`\n`; break;
+                    case "latex": replacement = `$$\n${selectedText}\n$$`; break;
+                }
+
+                noteEditor.setRangeText(replacement, start, end, "select");
+                noteEditor.focus();
+            });
+        });
+
+        // Export Dropdown
+        const exportDropdownBtn = document.getElementById("export-dropdown-btn");
+        const exportDropdownMenu = document.getElementById("export-dropdown-menu");
+
+        exportDropdownBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            exportDropdownMenu.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!exportDropdownMenu.contains(e.target) && !exportDropdownBtn.contains(e.target)) {
+                exportDropdownMenu.classList.add("hidden");
+            }
+        });
+
+        document.getElementById("export-copy").addEventListener("click", () => {
+            navigator.clipboard.writeText(noteEditor.value);
+            alert("Content copied to clipboard!");
+            exportDropdownMenu.classList.add("hidden");
+        });
+
+        document.getElementById("export-txt").addEventListener("click", () => {
+            const filename = document.getElementById("edit-file-title").value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'note';
+            const blob = new Blob([noteEditor.value], { type: 'text/markdown' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${filename}.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            exportDropdownMenu.classList.add("hidden");
+        });
+
+        document.getElementById("export-pdf").addEventListener("click", () => {
+            const filename = document.getElementById("edit-file-title").value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'note';
+            const element = document.getElementById('note-preview'); // Use the preview for PDF export
+            html2pdf().from(element).save(`${filename}.pdf`);
+            exportDropdownMenu.classList.add("hidden");
+        });
+
+        // Right Sidebar Tabs
+        const tabCalendar = document.getElementById("tab-calendar");
+        const tabVexAI = document.getElementById("tab-vex-ai");
+        const calendarContent = document.getElementById("calendar-content");
+        const vexAIContent = document.getElementById("vex-ai-content");
+
+        function showRightSidebarTab(tabId) {
+            calendarContent.classList.add("hidden");
+            vexAIContent.classList.add("hidden");
+            tabCalendar.classList.remove("border-b-2", "border-primary", "text-on-surface");
+            tabCalendar.classList.add("text-slate-text", "hover:text-on-surface");
+            tabVexAI.classList.remove("border-b-2", "border-primary", "text-on-surface");
+            tabVexAI.classList.add("text-slate-text", "hover:text-on-surface");
+
+            document.getElementById(tabId).classList.remove("hidden");
+            document.getElementById(`tab-${tabId.replace('-content', '')}`).classList.add("border-b-2", "border-primary", "text-on-surface");
+            document.getElementById(`tab-${tabId.replace('-content', '')}`).classList.remove("text-slate-text", "hover:text-on-surface");
+        }
+
+        tabCalendar.addEventListener("click", () => showRightSidebarTab("calendar-content"));
+        tabVexAI.addEventListener("click", () => showRightSidebarTab("vex-ai-content"));
+
+        // Initial tab selection
+        showRightSidebarTab("calendar-content");
+
+        // Google Calendar (Placeholder for now)
+        async function fetchGoogleCalendarEvents() {
+            const token = await getAuthToken();
+            if (!token) {
+                document.getElementById("upcoming-events").innerHTML = 
+                    `<div class="text-center text-slate-text p-4 border border-borders rounded-xl">
+                        <p>Connect your Google account to see events.</p>
+                        <button class="px-4 py-2 bg-primary text-background font-bold rounded-lg mt-2" onclick="window.location.href='/login'">Connect Google</button>
+                    </div>`;
+                document.getElementById("stat-events").textContent = "0";
+                return;
+            }
+
+            try {
+                // This requires the Google token to be passed from the client to the Flask backend
+                // For now, we'll mock it or assume the backend handles the token securely.
+                // In a real scenario, the client would send the Google token obtained from Supabase auth
+                // to the Flask backend, which then uses it to call Google Calendar API.
+                const googleToken = "YOUR_GOOGLE_OAUTH_TOKEN_FROM_SUPABASE_SESSION"; // This needs to be dynamically fetched
+                const data = await callApi("GET", "/api/v1/workspace/calendar", null, { "X-Google-Token": googleToken });
+                
+                const upcomingEventsDiv = document.getElementById("upcoming-events");
+                upcomingEventsDiv.innerHTML = '';
+                if (data.events.length > 0) {
+                    data.events.forEach(event => {
+                        const eventDiv = document.createElement("div");
+                        eventDiv.className = "bg-surface-high p-3 rounded-lg border border-borders";
+                        eventDiv.innerHTML = `
+                            <p class="text-sm font-bold text-on-surface">${event.title}</p>
+                            <p class="text-xs text-slate-text">${new Date(event.start_time).toLocaleString()}</p>
+                            <p class="text-xs text-slate-text">${event.description}</p>
+                        `;
+                        upcomingEventsDiv.appendChild(eventDiv);
+                    });
+                } else {
+                    upcomingEventsDiv.innerHTML = '<p class="text-slate-text">No upcoming events.</p>';
+                }
+                document.getElementById("stat-events").textContent = data.events.length;
+            } catch (error) {
+                console.error("Error fetching Google Calendar events:", error);
+                document.getElementById("upcoming-events").innerHTML = 
+                    `<div class="text-center text-red-400 p-4 border border-borders rounded-xl">
+                        <p>Failed to load calendar events: ${error.message}</p>
+                        <button class="px-4 py-2 bg-primary text-background font-bold rounded-lg mt-2" onclick="window.location.href='/login'">Reconnect Google</button>
+                    </div>`;
+                document.getElementById("stat-events").textContent = "0";
+            }
         }
         
-        // Generate Calendar Grid
-        const now = new Date();
-        document.getElementById('calendar-month-year').innerText = now.toLocaleDateString('default', { month: 'long', year: 'numeric' });
-        const grid = document.getElementById('calendar-days-grid');
-        grid.innerHTML = ['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => `<span class="text-slate-text font-bold text-[10px]">${d}</span>`).join('');
-        for (let i = 0; i < new Date(now.getFullYear(), now.getMonth(), 1).getDay(); i++) grid.innerHTML += `<span class="p-2"></span>`;
-        for (let d = 1; d <= new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); d++) {
-            grid.innerHTML += `<span class="p-2 rounded ${d === now.getDate() ? 'bg-primary text-[#00382f] font-bold shadow-lg shadow-primary/20' : 'text-on-surface hover:bg-surface-container-high cursor-pointer'}">${d}</span>`;
+        // Vex AI Chat (Placeholder for now)
+        const aiChatInput = document.getElementById("ai-chat-input");
+        const aiChatSendBtn = document.getElementById("ai-chat-send");
+        const chatHistory = document.getElementById("chat-history");
+
+        aiChatSendBtn.addEventListener("click", async () => {
+            const message = aiChatInput.value.trim();
+            if (message) {
+                appendChatMessage("user", message);
+                aiChatInput.value = '';
+                try {
+                    const response = await callApi("POST", "/api/chat", { message });
+                    appendChatMessage("ai", response.response);
+                } catch (error) {
+                    console.error("Error sending AI chat message:", error);
+                    appendChatMessage("ai", `Error: ${error.message}`);
+                }
+            }
+        });
+
+        function appendChatMessage(sender, message) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `flex ${sender === "user" ? "justify-end" : "justify-start"}`;
+            messageDiv.innerHTML = `
+                <div class="max-w-[70%] p-3 rounded-lg ${sender === "user" ? "bg-primary text-background" : "bg-surface-high text-on-surface"}">
+                    ${message}
+                </div>
+            `;
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
         }
-    }
-</script>
+
+    </script>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>

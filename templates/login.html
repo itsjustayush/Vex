@@ -69,7 +69,7 @@
         await supa.auth.signInWithOAuth({ 
             provider: 'google',
             options: { 
-                scopes: 'https://www.googleapis.com/auth/calendar.readonly', 
+                scopes: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events https://mail.google.com/ https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/tasks', 
                 redirectTo: window.location.origin + '/auth/callback' 
             }
         });
