@@ -28,6 +28,7 @@ def get_supabase_headers(jwt_token=None, use_service_role=False):
     headers = {
         "apikey": api_key,
         "Content-Type": "application/json",
+        "Prefer": "return=representation"  # <--- ADD THIS EXACT LINE
     }
     if jwt_token:
         headers["Authorization"] = f"Bearer {jwt_token}"
