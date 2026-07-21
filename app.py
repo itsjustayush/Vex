@@ -1,242 +1,180 @@
+"""
+Vex Workspace — FastAPI Backend
+Handles MongoDB CRUD, Google Calendar Proxy, AI Chat, and serves HTML templates.
+"""
+
 import os
 import time
+import uuid
+import logging
 from datetime import datetime, timezone
-from functools import wraps
+from typing import Annotated, Optional
+
+import httpx
 import jwt
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
-from flask_cors import CORS
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from motor.motor_asyncio import AsyncIOMotorClient
 
-from gemini_client import GeminiAssistant
-
+# -------- Setup --------
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app)
-
-import uuid
-
-# Temporary In-Memory Database for Notes until we connect Supabase Postgres
-MOCK_DB = {
-    "notes": [] 
-}
-
-START_TIME = time.time()
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+DB_NAME = os.environ.get("DB_NAME", "vex_workspace")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
+EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 BOT_NAME = os.environ.get("BOT_NAME", "Vex")
 
-try:
-    assistant = GeminiAssistant()
-    GEMINI_READY = True
-    GEMINI_INIT_ERROR = None
-except RuntimeError as exc:
-    assistant = None
-    GEMINI_READY = False
-    GEMINI_INIT_ERROR = str(exc)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("vex")
+START_TIME = time.time()
 
-def _uptime_seconds() -> int:
-    return int(time.time() - START_TIME)
+# Mongo & Templates
+mongo_client = AsyncIOMotorClient(MONGO_URL)
+db = mongo_client[DB_NAME]
+templates = Jinja2Templates(directory="templates")
 
-def _human_uptime(seconds: int) -> str:
-    days, rem = divmod(seconds, 86400)
-    hours, rem = divmod(rem, 3600)
-    minutes, secs = divmod(rem, 60)
-    parts = []
-    if days: parts.append(f"{days}d")
-    if hours: parts.append(f"{hours}h")
-    if minutes: parts.append(f"{minutes}m")
-    parts.append(f"{secs}s")
-    return " ".join(parts)
+app = FastAPI(title="Vex Workspace API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-def token_required(f):
-    """
-    This decorator protects endpoints. It checks for a valid JWT token
-    issued by Supabase in the Authorization header.
-    """
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        if "Authorization" in request.headers:
-            parts = request.headers["Authorization"].split()
-            if len(parts) == 2 and parts[0] == "Bearer":
-                token = parts[1]
-        
-        if not token:
-            return jsonify({"error": "Authentication Token is missing. Please log in."}), 401
-        
-        try:
-            secret = os.environ.get("SUPABASE_JWT_SECRET", "")
-            data = jwt.decode(token, secret, algorithms=["HS256"], audience="authenticated")
-            current_user_id = data.get("sub") 
-        except Exception as e:
-            return jsonify({"error": "Token is invalid or expired", "detail": str(e)}), 401
-            
-        return f(current_user_id, *args, **kwargs)
-    return decorated
+# ==========================================
+# FRONTEND TEMPLATE ROUTES
+# ==========================================
 
+def render_page(request: Request, template_name: str):
+    return templates.TemplateResponse(template_name, {
+        "request": request,
+        "supabase_url": SUPABASE_URL,
+        "supabase_anon_key": SUPABASE_ANON_KEY
+    })
 
-@app.route("/")
-def landing_page():
-    return render_template("index.html")
+@app.get("/", response_class=HTMLResponse)
+async def index_page(request: Request): return render_page(request, "index.html")
 
-@app.route("/dashboard")
-def dashboard_page():
-    return render_template(
-        "dashboard.html",
-        supabase_url=os.environ.get("SUPABASE_URL", ""),
-        supabase_anon_key=os.environ.get("SUPABASE_ANON_KEY", "")
-    )
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request): return render_page(request, "login.html")
 
-@app.route("/docs")
-def docs_page():
-    return render_template("docs.html")
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request): return render_page(request, "dashboard.html")
 
-@app.route("/status")
-def status_page():
-    return render_template("status.html")
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request): return render_page(request, "settings.html")
 
-@app.route("/login")
-def login_page():
-    return render_template(
-        "login.html",
-        supabase_url=os.environ.get("SUPABASE_URL", ""),
-        supabase_anon_key=os.environ.get("SUPABASE_ANON_KEY", "")
-    )
+@app.get("/docs", response_class=HTMLResponse)
+async def docs_page(request: Request): return render_page(request, "docs.html")
 
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template("404.html"), 404
+@app.get("/status", response_class=HTMLResponse)
+async def status_page(request: Request): return render_page(request, "status.html")
 
+@app.get("/auth/callback", response_class=HTMLResponse)
+async def callback_page(request: Request): return render_page(request, "callback.html")
+
+# ==========================================
+# AUTHENTICATION GUARD
+# ==========================================
+
+def get_current_user(authorization: Annotated[Optional[str], Header()] = None) -> str:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+    token = authorization.split(" ", 1)[1]
+    try:
+        if SUPABASE_JWT_SECRET:
+            payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
+        else:
+            payload = jwt.decode(token, options={"verify_signature": False})
+        user_id = payload.get("sub")
+        if not user_id: raise HTTPException(status_code=401, detail="Invalid token (no sub)")
+        return user_id
+    except jwt.PyJWTError as e:
+        raise HTTPException(status_code=401, detail=f"Token invalid: {e}")
+
+# ==========================================
+# API ROUTES (MongoDB Logic)
+# ==========================================
+
+def _now() -> str: return datetime.now(timezone.utc).isoformat()
+
+class ProjectIn(BaseModel): title: str; description: Optional[str] = ""
+class FileIn(BaseModel): title: str = "Untitled Note"; content: str = ""; folder: str = "General"; extension: str = "md"
+class FilePatch(BaseModel): title: Optional[str] = None; content: Optional[str] = None; folder: Optional[str] = None; extension: Optional[str] = None
+class ChatIn(BaseModel): message: str; user_id: Optional[str] = None; session_id: Optional[str] = None; system_prompt: Optional[str] = None
 
 @app.get("/api/health")
-def health():
-    uptime = _uptime_seconds()
-    return jsonify({
-        "status": "online" if GEMINI_READY else "degraded",
-        "gemini_configured": GEMINI_READY,
-        "gemini_error": GEMINI_INIT_ERROR,
-        "model": assistant.model if assistant else None,
-        "uptime_seconds": uptime,
-        "uptime_human": _human_uptime(uptime),
-        "active_conversations": assistant.active_conversation_count() if assistant else 0,
-        "server_time_utc": datetime.now(timezone.utc).isoformat(),
-    })
+async def health():
+    return {"status": "online", "uptime_seconds": int(time.time() - START_TIME), "server_time_utc": _now()}
 
-@app.get("/api/me")
-@token_required
-def get_current_user(current_user_id):
-    """Test endpoint to verify valid JWT tokens."""
-    return jsonify({
-        "status": "success",
-        "message": "You are securely authenticated!",
-        "user_id": current_user_id
-    })
+@app.get("/api/v1/projects")
+async def list_projects(user_id: str = Depends(get_current_user)):
+    cursor = db.projects.find({"user_id": user_id}).sort("created_at", -1)
+    return {"projects": [{"id": d["_id"], "title": d["title"], "description": d.get("description", ""), "created_at": d["created_at"]} async for d in cursor]}
 
+@app.post("/api/v1/projects")
+async def create_project(payload: ProjectIn, user_id: str = Depends(get_current_user)):
+    doc = {"_id": f"prj_{uuid.uuid4().hex[:12]}", "user_id": user_id, "title": payload.title.strip() or "Untitled Project", "description": payload.description.strip(), "created_at": _now()}
+    await db.projects.insert_one(doc)
+    return {"project": {"id": doc["_id"], "title": doc["title"], "description": doc["description"], "created_at": doc["created_at"]}}
 
-# ==========================================
-# REST API: NOTES (CRUD)
-# ==========================================
+@app.delete("/api/v1/projects/{project_id}")
+async def delete_project(project_id: str, user_id: str = Depends(get_current_user)):
+    res = await db.projects.delete_one({"_id": project_id, "user_id": user_id})
+    if res.deleted_count == 0: raise HTTPException(status_code=404, detail="Project not found")
+    await db.files.delete_many({"project_id": project_id, "user_id": user_id})
+    return {"status": "deleted"}
 
-@app.route("/api/v1/notes", methods=["GET", "POST"])
-@token_required
-def handle_notes(current_user_id):
-    if request.method == "GET":
-        # Fetch all notes for this user
-        user_notes = [n for n in MOCK_DB["notes"] if n["user_id"] == current_user_id]
-        return jsonify({"status": "success", "notes": user_notes}), 200
+@app.get("/api/v1/projects/{project_id}/files")
+async def list_files(project_id: str, user_id: str = Depends(get_current_user)):
+    cursor = db.files.find({"project_id": project_id, "user_id": user_id}).sort("updated_at", -1)
+    return {"files": [{"id": d["_id"], "title": d["title"], "content": d.get("content",""), "folder": d.get("folder","General"), "extension": d.get("extension","md")} async for d in cursor]}
 
-    if request.method == "POST":
-        # Create a new note
-        data = request.get_json() or {}
-        new_note = {
-            "id": f"nt_{uuid.uuid4().hex[:10]}",
-            "user_id": current_user_id,
-            "title": data.get("title", "Untitled Note"),
-            "content": data.get("content", ""),
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "tags": data.get("tags", [])
-        }
-        MOCK_DB["notes"].append(new_note)
-        return jsonify({"status": "created", "note": new_note}), 201
+@app.post("/api/v1/projects/{project_id}/files")
+async def create_file(project_id: str, payload: FileIn, user_id: str = Depends(get_current_user)):
+    doc = {"_id": f"nt_{uuid.uuid4().hex[:12]}", "user_id": user_id, "project_id": project_id, "title": payload.title, "content": payload.content, "folder": payload.folder, "extension": payload.extension, "created_at": _now(), "updated_at": _now()}
+    await db.files.insert_one(doc)
+    return {"file": {"id": doc["_id"], "title": doc["title"], "content": doc["content"], "folder": doc["folder"]}}
 
+@app.put("/api/v1/projects/{project_id}/files/{file_id}")
+async def update_file(project_id: str, file_id: str, payload: FilePatch, user_id: str = Depends(get_current_user)):
+    updates = {"updated_at": _now()}
+    if payload.title is not None: updates["title"] = payload.title
+    if payload.content is not None: updates["content"] = payload.content
+    if payload.folder is not None: updates["folder"] = payload.folder
+    res = await db.files.update_one({"_id": file_id, "project_id": project_id, "user_id": user_id}, {"$set": updates})
+    if res.matched_count == 0: raise HTTPException(status_code=404, detail="File not found")
+    doc = await db.files.find_one({"_id": file_id})
+    return {"file": {"id": doc["_id"], "title": doc["title"], "content": doc["content"], "folder": doc["folder"]}}
 
-@app.route("/api/v1/notes/<note_id>", methods=["DELETE"])
-@token_required
-def delete_note(current_user_id, note_id):
-    # Find and delete the note
-    global MOCK_DB
-    initial_length = len(MOCK_DB["notes"])
-    MOCK_DB["notes"] = [n for n in MOCK_DB["notes"] if not (n["id"] == note_id and n["user_id"] == current_user_id)]
+@app.delete("/api/v1/projects/{project_id}/files/{file_id}")
+async def delete_file(project_id: str, file_id: str, user_id: str = Depends(get_current_user)):
+    await db.files.delete_one({"_id": file_id, "project_id": project_id, "user_id": user_id})
+    return {"status": "deleted"}
+
+@app.get("/api/v1/workspace/calendar")
+async def google_calendar(x_google_token: Annotated[Optional[str], Header()] = None, user_id: str = Depends(get_current_user)):
+    if not x_google_token: return {"sync_status": "unlinked", "events": []}
     
-    if len(MOCK_DB["notes"]) < initial_length:
-        return jsonify({"status": "deleted"}), 200
-    return jsonify({"error": "Note not found or unauthorized"}), 404
-
-
-# ==========================================
-# REST API: GOOGLE WORKSPACE
-# ==========================================
-
-@app.route("/api/v1/workspace/calendar", methods=["GET"])
-@token_required
-def get_calendar(current_user_id):
-    """
-    In the future, we will take the Google Provider Token from the user's session
-    and hit the Google Calendar API here. For now, we return placeholder AI context.
-    """
-    return jsonify({
-        "sync_status": "active",
-        "provider": "google",
-        "events": [
-            {
-                "event_id": "gcal_mock_1",
-                "title": "Product Sync with Vex Team",
-                "start_time": datetime.now(timezone.utc).isoformat(),
-                "ai_context": "This meeting is related to your 'Project Alpha' note."
-            }
-        ]
-    }), 200
-
-@app.route("/settings")
-def settings_page():
-    return render_template(
-        "settings.html",
-        supabase_url=os.environ.get("SUPABASE_URL", ""),
-        supabase_anon_key=os.environ.get("SUPABASE_ANON_KEY", "")
-    )
-
-@app.post("/api/chat")
-def chat():
-    if not GEMINI_READY:
-        return jsonify({"error": "Gemini is not configured on the server", "detail": GEMINI_INIT_ERROR}), 503
-
-    data = request.get_json(silent=True) or {}
-    message = (data.get("message") or "").strip()
-    user_id = str(data.get("user_id") or "default_user")
-    image_base64 = data.get("image_base64")
-    dynamic_model = data.get("model")
-
-    if not message and not image_base64:
-        return jsonify({"error": "Field 'message' or 'image_base64' is required"}), 400
-
-    try:
-        reply = assistant.chat(
-            user_id=user_id, 
-            message=message, 
-            image_base64=image_base64,
-            dynamic_model=dynamic_model
-        )
-    except RuntimeError as exc:
-        return jsonify({"error": "Failed to get a response from Gemini", "detail": str(exc)}), 502
-
-    return jsonify({
-        "response": reply,
-        "user_id": user_id,
-        "model": dynamic_model or assistant.model,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    url = f"https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin={_now()}&maxResults=20&singleEvents=true&orderBy=startTime"
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(url, headers={"Authorization": f"Bearer {x_google_token}"})
+    
+    if resp.status_code == 200:
+        events = [{"title": i.get("summary", "Event"), "start_time": i.get("start", {}).get("dateTime"), "description": i.get("description", "")} for i in resp.json().get("items", [])]
+        return {"sync_status": "active", "events": events}
+    return {"sync_status": "error", "events": []}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)
