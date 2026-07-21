@@ -4,9 +4,16 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Vex Workspace - Productivity Engine</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<!-- Tailwind & Fonts -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet"/>
+
+<!-- Markdown Parser & PDF Exporter -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script id="tailwind-config">
     tailwind.config = {
         darkMode: "class",
@@ -19,6 +26,7 @@
         }
     }
 </script>
+
 <style>
     body { background-color: #131316; color: #e4e1e6; font-family: 'Inter', sans-serif; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
@@ -106,25 +114,94 @@
         </article>
     </section>
 
-    <!-- VIEW 2: PROJECTS GRID (Hidden by default) -->
+    <!-- VIEW 2: PROJECTS GRID & EDITOR -->
     <section id="view-projects" class="flex-1 overflow-y-auto custom-scrollbar p-10 hidden">
-        <div class="max-w-[900px] mx-auto space-y-6">
-            <div class="flex justify-between items-center">
+        <div class="max-w-[1000px] mx-auto space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-border pb-4">
                 <div>
-                    <h2 class="text-3xl font-bold text-on-surface">Projects</h2>
-                    <p class="text-sm text-slate-text">Manage your active workspaces and connected repositories.</p>
+                    <h2 class="text-3xl font-bold text-on-surface">Projects Workspace</h2>
+                    <p class="text-sm text-slate-text">Manage your active workspaces, files, and markdown notes.</p>
                 </div>
             </div>
             
+            <!-- Projects Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="projects-container">
-                <!-- Sample Active Project Card -->
-                <div class="glass-panel p-5 rounded-xl space-y-3">
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">Active</span>
-                        <span class="material-symbols-outlined text-slate-text text-sm">more_vert</span>
+                <!-- Dynamically loaded projects go here -->
+            </div>
+
+            <!-- Active Project File Explorer & Editor Section -->
+            <div id="project-workspace" class="hidden space-y-6 pt-6 border-t border-slate-border">
+                <!-- Project Header Controls -->
+                <div class="flex justify-between items-center bg-surface-container-low p-4 rounded-xl border border-slate-border">
+                    <div>
+                        <span class="text-[10px] text-primary font-bold uppercase tracking-widest">Active Workspace</span>
+                        <h3 class="text-2xl font-bold text-on-surface" id="active-project-title">Project Name</h3>
                     </div>
-                    <h3 class="font-bold text-lg text-on-surface">Neural Graph Integration</h3>
-                    <p class="text-xs text-slate-text">Building bidirectional linking for Gemini AI prompts and notes context.</p>
+                    <div class="flex gap-2">
+                        <button id="add-file-btn" class="px-4 py-2 bg-primary text-[#00382f] font-bold text-xs rounded-lg flex items-center gap-1.5 hover:brightness-110">
+                            <span class="material-symbols-outlined text-sm">note_add</span> New Note
+                        </button>
+                        <button id="delete-project-btn" class="px-3 py-2 bg-red-500/10 text-red-400 border border-red-500/20 font-bold text-xs rounded-lg hover:bg-red-500/20">
+                            Delete Project
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-12 gap-6">
+                    <!-- File List Sidebar -->
+                    <div class="col-span-12 md:col-span-4 bg-surface-container-low p-4 rounded-xl border border-slate-border space-y-3">
+                        <h4 class="text-xs font-bold text-slate-text uppercase">Project Files</h4>
+                        <div id="file-list" class="space-y-2">
+                            <!-- Dynamically loaded files -->
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Live File Editor -->
+                    <div class="col-span-12 md:col-span-8 bg-surface-container-low p-6 rounded-xl border border-slate-border flex flex-col h-[600px]" id="editor-container">
+                        
+                        <!-- Top Bar: Title & Save -->
+                        <div class="flex justify-between items-center mb-4">
+                            <input id="edit-file-title" type="text" class="bg-transparent text-xl font-bold text-on-surface border-b border-transparent focus:border-primary focus:outline-none w-full mr-4" placeholder="File Title...">
+                            <button id="save-file-btn" class="px-4 py-1.5 bg-primary text-[#00382f] font-bold text-xs rounded-lg flex items-center gap-1 hover:brightness-110 shrink-0">
+                                <span class="material-symbols-outlined text-sm">save</span> Save
+                            </button>
+                        </div>
+
+                        <!-- Folder Input -->
+                        <div class="mb-4">
+                            <label class="text-[10px] text-slate-text uppercase font-bold">Folder / Category</label>
+                            <input id="edit-file-folder" type="text" class="w-full bg-background border border-slate-border rounded-lg p-2 text-xs text-white mt-1" placeholder="General">
+                        </div>
+
+                        <!-- Enhanced Editor Toolbar -->
+                        <div class="flex items-center justify-between bg-background border border-slate-border rounded-t-lg p-2 border-b-0">
+                            <div class="flex gap-2">
+                                <button id="btn-edit-mode" class="px-3 py-1 rounded bg-primary/20 text-primary text-xs font-bold transition-colors">Edit</button>
+                                <button id="btn-preview-mode" class="px-3 py-1 rounded text-slate-text hover:text-on-surface text-xs font-bold transition-colors">Preview (MD)</button>
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <span class="text-[10px] text-slate-text uppercase font-bold mr-2">Export:</span>
+                                <button id="btn-export-copy" class="p-1.5 text-slate-text hover:text-primary transition-colors" title="Copy to Clipboard">
+                                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                                </button>
+                                <button id="btn-export-txt" class="p-1.5 text-slate-text hover:text-primary transition-colors" title="Download .txt">
+                                    <span class="material-symbols-outlined text-sm">description</span>
+                                </button>
+                                <button id="btn-export-pdf" class="p-1.5 text-slate-text hover:text-primary transition-colors" title="Download PDF">
+                                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Editor & Preview Area -->
+                        <div class="relative flex-1 flex flex-col min-h-0 border border-slate-border rounded-b-lg overflow-hidden">
+                            <textarea id="edit-file-content" class="w-full h-full bg-background p-4 text-sm text-white font-mono markdown-editor resize-none focus:outline-none" placeholder="Write your notes here using Markdown..."></textarea>
+                            
+                            <div id="preview-content" class="hidden absolute inset-0 w-full h-full bg-background p-6 overflow-y-auto prose prose-invert max-w-none text-on-surface">
+                                <!-- Rendered markdown appears here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -153,14 +230,14 @@
         <!-- TAB CONTENT 1: GOOGLE WORKSPACE CALENDAR -->
         <div id="tab-content-calendar" class="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-6">
             <div class="flex justify-between items-center">
-                <h4 class="font-bold text-sm text-on-surface uppercase tracking-wider" id="calendar-month-year">July 2026</h4>
-                <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Google Synced
+                <h4 class="font-bold text-sm text-on-surface uppercase tracking-wider" id="calendar-month-year">Calendar</h4>
+                <span id="sync-status-badge" class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Synced
                 </span>
             </div>
 
-            <!-- Dark Theme Calendar Grid -->
-            <div class="grid grid-cols-7 gap-1 text-center text-xs">
+            <!-- Dynamic Calendar Days Grid -->
+            <div class="grid grid-cols-7 gap-1 text-center text-xs" id="calendar-days-grid">
                 <span class="text-slate-text font-bold text-[10px]">Su</span>
                 <span class="text-slate-text font-bold text-[10px]">Mo</span>
                 <span class="text-slate-text font-bold text-[10px]">Tu</span>
@@ -168,52 +245,14 @@
                 <span class="text-slate-text font-bold text-[10px]">Th</span>
                 <span class="text-slate-text font-bold text-[10px]">Fr</span>
                 <span class="text-slate-text font-bold text-[10px]">Sa</span>
-
-                <!-- Days of July 2026 -->
-                <span class="p-2 text-slate-text opacity-30">28</span><span class="p-2 text-slate-text opacity-30">29</span><span class="p-2 text-slate-text opacity-30">30</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">1</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">2</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">3</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">4</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">5</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">6</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">7</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">8</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">9</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">10</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">11</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">12</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">13</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">14</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">15</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">16</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">17</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">18</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">19</span>
-                <!-- Today Highlighted -->
-                <span class="p-2 bg-primary text-[#00382f] font-bold rounded shadow-lg shadow-primary/20">20</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">21</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">22</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">23</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">24</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">25</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">26</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">27</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">28</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">29</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">30</span>
-                <span class="p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer">31</span>
+                <!-- Generated dynamically via Javascript -->
             </div>
 
             <!-- Workspace Upcoming Agenda -->
             <div class="space-y-3 pt-4 border-t border-slate-border">
-                <h5 class="text-xs font-bold text-slate-text uppercase">Upcoming Events</h5>
-                <div class="p-3 bg-surface-container-low rounded-xl border border-slate-border space-y-1">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-primary">Product Sync</span>
-                        <span class="text-[10px] text-slate-text">10:00 AM</span>
-                    </div>
-                    <p class="text-[11px] text-on-surface-variant">Related to Project Alpha notes context.</p>
+                <h5 class="text-xs font-bold text-slate-text uppercase">Google Calendar Events</h5>
+                <div id="upcoming-events-list" class="space-y-2">
+                    <p class="text-xs text-slate-text italic">Loading Google Calendar events...</p>
                 </div>
             </div>
         </div>
@@ -268,7 +307,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const supabaseClient = window.supabase.createClient('{{ supabase_url }}', '{{ supabase_anon_key }}');
+    
+    let jwtToken = null;
     let currentUserId = null;
+    let googleOAuthToken = null;
+    let activeProjectId = null;
+    let activeFileId = null;
 
     // 1. AUTH GUARD
     window.onload = async () => {
@@ -277,9 +321,16 @@
             window.location.href = '/login';
             return;
         }
+        jwtToken = session.access_token;
         currentUserId = session.user.id;
+        googleOAuthToken = session.provider_token || null;
+        
         document.getElementById('user-email-display').innerText = session.user.email;
         document.getElementById('user-avatar-initial').innerText = (session.user.email[0] || 'U').toUpperCase();
+
+        renderDynamicCalendar();
+        await fetchGoogleCalendarEvents();
+        await fetchProjects();
     };
 
     // 2. NAV TAB SWITCHING (Dashboard vs Projects)
@@ -340,32 +391,303 @@
         tabBtnCalendar.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-text hover:text-on-surface flex items-center gap-1.5";
     });
 
-    // 5. NEW PROJECT MODAL LOGIC
+    // 5. CALENDAR & EVENT FETCHING
+    function renderDynamicCalendar() {
+        const now = new Date();
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById('calendar-month-year').innerText = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
+        const grid = document.getElementById('calendar-days-grid');
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+        const headers = grid.querySelectorAll('span:nth-child(-n+7)');
+        grid.innerHTML = '';
+        headers.forEach(h => grid.appendChild(h));
+
+        for (let i = 0; i < firstDay; i++) {
+            const span = document.createElement('span');
+            span.className = "p-2 text-slate-text opacity-20";
+            span.innerText = "";
+            grid.appendChild(span);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const span = document.createElement('span');
+            if (day === now.getDate()) {
+                span.className = "p-2 bg-primary text-[#00382f] font-bold rounded shadow-lg shadow-primary/20";
+            } else {
+                span.className = "p-2 text-on-surface hover:bg-surface-container-high rounded cursor-pointer";
+            }
+            span.innerText = day;
+            grid.appendChild(span);
+        }
+    }
+
+    async function fetchGoogleCalendarEvents() {
+        const container = document.getElementById('upcoming-events-list');
+        try {
+            const headers = { 'Authorization': `Bearer ${jwtToken}` };
+            if (googleOAuthToken) headers['X-Google-Token'] = googleOAuthToken;
+
+            const res = await fetch('/api/v1/workspace/calendar', { headers });
+            const data = await res.json();
+
+            container.innerHTML = '';
+            if (data.events && data.events.length > 0) {
+                data.events.forEach(evt => {
+                    const timeStr = evt.start_time ? new Date(evt.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'All Day';
+                    const card = document.createElement('div');
+                    card.className = "p-3 bg-surface-container-low rounded-xl border border-slate-border space-y-1";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-primary">${evt.title}</span>
+                            <span class="text-[10px] text-slate-text">${timeStr}</span>
+                        </div>
+                        <p class="text-[11px] text-on-surface-variant">${evt.description || 'Google Calendar Event'}</p>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p class="text-xs text-slate-text">No upcoming events found.</p>';
+            }
+        } catch (err) {
+            container.innerHTML = '<p class="text-xs text-red-400">Failed to load calendar events.</p>';
+        }
+    }
+
+    // 6. PROJECTS & FILE ORGANIZER (CRUD)
+    async function fetchProjects() {
+        try {
+            const res = await fetch('/api/v1/projects', {
+                headers: { 'Authorization': `Bearer ${jwtToken}` }
+            });
+            const data = await res.json();
+            const container = document.getElementById('projects-container');
+            container.innerHTML = '';
+
+            if (data.projects && data.projects.length > 0) {
+                data.projects.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = "glass-panel p-5 rounded-xl space-y-3 cursor-pointer hover:border-primary/50 transition-all";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">Workspace</span>
+                            <span class="material-symbols-outlined text-slate-text text-sm">open_in_new</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-on-surface">${p.title}</h3>
+                        <p class="text-xs text-slate-text">${p.description || 'No description provided.'}</p>
+                    `;
+                    card.onclick = () => openProjectWorkspace(p);
+                    container.appendChild(card);
+                });
+            }
+        } catch (err) {
+            console.error("Error fetching projects:", err);
+        }
+    }
+
+    async function openProjectWorkspace(project) {
+        activeProjectId = project.id;
+        document.getElementById('project-workspace').classList.remove('hidden');
+        document.getElementById('active-project-title').innerText = project.title;
+        await fetchProjectFiles(project.id);
+    }
+
+    async function fetchProjectFiles(projectId) {
+        try {
+            const res = await fetch(`/api/v1/projects/${projectId}/files`, {
+                headers: { 'Authorization': `Bearer ${jwtToken}` }
+            });
+            const data = await res.json();
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+
+            if (data.files && data.files.length > 0) {
+                data.files.forEach((f, idx) => {
+                    const item = document.createElement('div');
+                    item.className = "p-2.5 rounded-lg bg-background hover:bg-surface-container-high border border-slate-border cursor-pointer flex justify-between items-center text-xs";
+                    item.innerHTML = `
+                        <div>
+                            <p class="font-bold text-on-surface">${f.title}</p>
+                            <span class="text-[10px] text-primary">${f.folder || 'General'}</span>
+                        </div>
+                        <button class="text-slate-text hover:text-red-400" onclick="deleteFile(event, '${f.id}')"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    `;
+                    item.onclick = (e) => {
+                        if (e.target.closest('button')) return;
+                        selectFileToEdit(f);
+                    };
+                    fileList.appendChild(item);
+                    if (idx === 0) selectFileToEdit(f); // Auto-select first file
+                });
+            } else {
+                fileList.innerHTML = '<p class="text-xs text-slate-text">No notes or files yet. Click "New Note" to add one.</p>';
+            }
+        } catch (err) {
+            console.error("Error fetching files:", err);
+        }
+    }
+
+    function selectFileToEdit(file) {
+        activeFileId = file.id;
+        document.getElementById('edit-file-title').value = file.title;
+        document.getElementById('edit-file-folder').value = file.folder || 'General';
+        document.getElementById('edit-file-content').value = file.content || '';
+        // Revert to Edit mode on new file selection
+        if (!document.getElementById('preview-content').classList.contains('hidden')) {
+            document.getElementById('btn-edit-mode').click();
+        }
+    }
+
+    document.getElementById('add-file-btn').addEventListener('click', async () => {
+        if (!activeProjectId) return;
+        const res = await fetch(`/api/v1/projects/${activeProjectId}/files`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+            body: JSON.stringify({ title: 'New Note.md', content: '', folder: 'General' })
+        });
+        if (res.ok) await fetchProjectFiles(activeProjectId);
+    });
+
+    document.getElementById('save-file-btn').addEventListener('click', async () => {
+        if (!activeProjectId || !activeFileId) return;
+        const title = document.getElementById('edit-file-title').value.trim();
+        const folder = document.getElementById('edit-file-folder').value.trim();
+        const content = document.getElementById('edit-file-content').value;
+
+        await fetch(`/api/v1/projects/${activeProjectId}/files/${activeFileId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+            body: JSON.stringify({ title, folder, content })
+        });
+        await fetchProjectFiles(activeProjectId);
+        
+        // Brief save confirmation
+        const btn = document.getElementById('save-file-btn');
+        const origContent = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm">check</span> Saved';
+        setTimeout(() => btn.innerHTML = origContent, 2000);
+    });
+
+    async function deleteFile(e, fileId) {
+        e.stopPropagation();
+        if (!activeProjectId) return;
+        await fetch(`/api/v1/projects/${activeProjectId}/files/${fileId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${jwtToken}` }
+        });
+        await fetchProjectFiles(activeProjectId);
+    }
+
+    document.getElementById('delete-project-btn').addEventListener('click', async () => {
+        if (!activeProjectId) return;
+        if (!confirm("Are you sure you want to delete this project and all its notes?")) return;
+        
+        await fetch(`/api/v1/projects/${activeProjectId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${jwtToken}` }
+        });
+        document.getElementById('project-workspace').classList.add('hidden');
+        await fetchProjects();
+    });
+
+    // 7. NEW PROJECT MODAL
     const modal = document.getElementById('new-project-modal');
     document.getElementById('open-new-project-modal').addEventListener('click', () => modal.classList.remove('hidden'));
     document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
 
-    document.getElementById('save-project-btn').addEventListener('click', () => {
+    document.getElementById('save-project-btn').addEventListener('click', async () => {
         const title = document.getElementById('project-title-input').value.trim();
-        const desc = document.getElementById('project-desc-input').value.trim();
+        const description = document.getElementById('project-desc-input').value.trim();
         if (!title) return;
 
-        const card = document.createElement('div');
-        card.className = "glass-panel p-5 rounded-xl space-y-3";
-        card.innerHTML = `
-            <div class="flex justify-between items-start">
-                <span class="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">Active</span>
-            </div>
-            <h3 class="font-bold text-lg text-on-surface">${title}</h3>
-            <p class="text-xs text-slate-text">${desc || 'No description provided.'}</p>
-        `;
-        document.getElementById('projects-container').appendChild(card);
+        await fetch('/api/v1/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+            body: JSON.stringify({ title, description })
+        });
+
         modal.classList.add('hidden');
         document.getElementById('project-title-input').value = '';
         document.getElementById('project-desc-input').value = '';
+        await fetchProjects();
     });
 
-    // 6. CHATBOT LOGIC
+    // 8. EDITOR & EXPORT LOGIC
+    const editModeBtn = document.getElementById('btn-edit-mode');
+    const previewModeBtn = document.getElementById('btn-preview-mode');
+    const editorArea = document.getElementById('edit-file-content');
+    const previewArea = document.getElementById('preview-content');
+    const titleInput = document.getElementById('edit-file-title');
+
+    // Toggle Preview Mode
+    previewModeBtn.addEventListener('click', () => {
+        const markdownText = editorArea.value;
+        previewArea.innerHTML = marked.parse(markdownText);
+        
+        editorArea.classList.add('hidden');
+        previewArea.classList.remove('hidden');
+        
+        previewModeBtn.className = "px-3 py-1 rounded bg-primary/20 text-primary text-xs font-bold transition-colors";
+        editModeBtn.className = "px-3 py-1 rounded text-slate-text hover:text-on-surface text-xs font-bold transition-colors";
+    });
+
+    // Toggle Edit Mode
+    editModeBtn.addEventListener('click', () => {
+        previewArea.classList.add('hidden');
+        editorArea.classList.remove('hidden');
+        
+        editModeBtn.className = "px-3 py-1 rounded bg-primary/20 text-primary text-xs font-bold transition-colors";
+        previewModeBtn.className = "px-3 py-1 rounded text-slate-text hover:text-on-surface text-xs font-bold transition-colors";
+    });
+
+    // Export: Copy to Clipboard
+    document.getElementById('btn-export-copy').addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(editorArea.value);
+            alert('Copied to clipboard!');
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    });
+
+    // Export: Download as .txt (or custom extension)
+    document.getElementById('btn-export-txt').addEventListener('click', () => {
+        const text = editorArea.value;
+        const title = titleInput.value.trim() || 'Untitled_Note';
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${title}.md`; 
+        a.click();
+        
+        URL.revokeObjectURL(url);
+    });
+
+    // Export: Download as PDF
+    document.getElementById('btn-export-pdf').addEventListener('click', () => {
+        const tempDiv = document.createElement('div');
+        tempDiv.className = 'prose prose-invert p-8 bg-[#131316] text-white';
+        tempDiv.innerHTML = `
+            <h1>${titleInput.value || 'Untitled Note'}</h1>
+            ${marked.parse(editorArea.value)}
+        `;
+        
+        const opt = {
+            margin: 1,
+            filename: `${titleInput.value || 'Note'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#131316' },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        html2pdf().set(opt).from(tempDiv).save();
+    });
+
+    // 9. CHATBOT LOGIC
     const chatHistory = document.getElementById('chat-history');
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
